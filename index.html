@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- v2.1 -->
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -158,6 +159,10 @@
                 inset 0 1px 0 rgba(168, 85, 247, 0.3);
         }
 
+        #pieChart {
+            filter: drop-shadow(0 0 12px rgba(124,58,237,0.1));
+        }
+
         .tab-bar-container {
             background-color: rgba(20, 20, 22, 0.6);
             backdrop-filter: blur(40px);
@@ -290,6 +295,203 @@
             background-color: rgba(6, 182, 212, 0.2) !important;
             animation: mic-pulse 1.5s infinite;
             border-color: rgba(6, 182, 212, 0.5) !important;
+        }
+
+        #voice-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(120% 35% at 50% 0%, rgba(124,58,237,0.35) 0%, rgba(88,28,195,0.12) 50%, transparent 100%) no-repeat, #000;
+        }
+        #voice-overlay.active { display: flex; }
+        .voice-orb-wrap {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 600px;
+            transform-style: preserve-3d;
+        }
+        .voice-orb {
+            position: relative;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            z-index: 2;
+            background: radial-gradient(circle at 40% 35%, #1a0860 0%, #0a0228 70%, #050114 100%);
+            box-shadow:
+                0 0 60px rgba(120,40,255,0.5),
+                0 0 120px rgba(80,0,200,0.25),
+                0 0 200px rgba(60,60,255,0.1),
+                0 25px 50px rgba(0,0,0,0.9);
+            overflow: hidden;
+            animation: orbFloat 6s ease-in-out infinite;
+        }
+        /* Deep color base layers */
+        .voice-orb-layer { position: absolute; inset: 0; border-radius: 50%; }
+        .voice-orb-layer.l1 {
+            background:
+                radial-gradient(ellipse 85% 55% at 28% 30%, rgba(160,0,255,0.85) 0%, transparent 50%),
+                radial-gradient(ellipse 75% 65% at 72% 72%, rgba(0,60,220,0.9) 0%, transparent 45%);
+            animation: layerFlow1 5s ease-in-out infinite;
+        }
+        .voice-orb-layer.l2 {
+            background:
+                radial-gradient(ellipse 55% 85% at 68% 22%, rgba(255,0,120,0.6) 0%, transparent 40%),
+                radial-gradient(ellipse 50% 55% at 22% 72%, rgba(0,100,255,0.7) 0%, transparent 40%);
+            animation: layerFlow2 7s ease-in-out infinite;
+            mix-blend-mode: screen;
+        }
+        .voice-orb-layer.l3 {
+            background:
+                conic-gradient(from 200deg at 38% 48%, transparent 0%, rgba(130,0,255,0.5) 10%, transparent 22%),
+                conic-gradient(from 60deg at 62% 42%, transparent 0%, rgba(0,100,255,0.4) 12%, transparent 26%);
+            animation: layerFlow3 10s linear infinite;
+            mix-blend-mode: screen;
+        }
+        .voice-orb-layer.l4 {
+            background:
+                linear-gradient(145deg, transparent 18%, rgba(255,40,160,0.5) 32%, rgba(120,0,255,0.3) 48%, transparent 62%),
+                linear-gradient(285deg, transparent 28%, rgba(0,140,255,0.4) 42%, transparent 58%);
+            animation: layerFlow4 4.5s ease-in-out infinite alternate;
+            mix-blend-mode: screen;
+        }
+        /* Glass curvature: darker at edges, lighter center-top */
+        .voice-orb-glass {
+            position: absolute; inset: 0; border-radius: 50%;
+            background: radial-gradient(ellipse 70% 60% at 42% 38%, rgba(255,255,255,0.04) 0%, transparent 50%),
+                        radial-gradient(circle at 50% 50%, transparent 40%, rgba(0,0,20,0.4) 80%);
+        }
+        /* Fresnel rim - multi-color, varies around the edge */
+        .voice-orb-rim {
+            position: absolute; inset: 0; border-radius: 50%;
+            background:
+                radial-gradient(circle at 50% 50%, transparent 57%,
+                    rgba(120,50,255,0.35) 68%,
+                    rgba(180,100,255,0.55) 78%,
+                    rgba(220,160,255,0.5) 86%,
+                    rgba(255,220,255,0.2) 92%,
+                    transparent 100%),
+                radial-gradient(circle at 80% 50%, transparent 50%, rgba(100,180,255,0.25) 70%, transparent 85%),
+                radial-gradient(circle at 20% 35%, transparent 50%, rgba(255,100,200,0.2) 70%, transparent 85%);
+            animation: rimPulse 3s ease-in-out infinite alternate;
+        }
+        /* Primary specular - elongated, sharp */
+        .voice-orb-highlight {
+            position: absolute;
+            top: 7%;
+            left: 16%;
+            width: 34%;
+            height: 16%;
+            border-radius: 45% 55% 55% 45% / 60% 60% 40% 40%;
+            background: linear-gradient(175deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.25) 40%, transparent 80%);
+            filter: blur(2px);
+            transform: rotate(-8deg);
+            animation: highlightDrift 5s ease-in-out infinite alternate;
+        }
+        /* Small sharp secondary specular */
+        .voice-orb-highlight2 {
+            position: absolute;
+            top: 14%;
+            left: 28%;
+            width: 12%;
+            height: 6%;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.6);
+            filter: blur(1.5px);
+            animation: highlightDrift 4s ease-in-out infinite alternate-reverse;
+        }
+        /* Bottom reflection for ground */
+        .voice-orb-reflect {
+            position: absolute;
+            bottom: 8%;
+            right: 15%;
+            width: 25%;
+            height: 10%;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center, rgba(80,160,255,0.3) 0%, transparent 70%);
+            filter: blur(4px);
+            animation: reflectShift 6s ease-in-out infinite alternate;
+        }
+        /* Inner depth and curvature shadow */
+        .voice-orb-edge {
+            position: absolute; inset: 0; border-radius: 50%;
+            box-shadow:
+                inset 0 -25px 45px rgba(0,0,20,0.7),
+                inset 0 12px 25px rgba(120,60,255,0.12),
+                inset -8px 0 20px rgba(0,0,40,0.3),
+                inset 8px 0 20px rgba(0,0,40,0.2);
+        }
+        @keyframes orbFloat {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.02) translateY(-4px); }
+        }
+        @keyframes layerFlow1 {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(10deg) scale(1.03); }
+        }
+        @keyframes layerFlow2 {
+            0%, 100% { transform: rotate(0deg) scale(1); opacity: 0.8; }
+            33% { transform: rotate(-6deg) scale(1.02); opacity: 1; }
+            66% { transform: rotate(5deg) scale(0.98); opacity: 0.85; }
+        }
+        @keyframes layerFlow3 {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes layerFlow4 {
+            0% { transform: rotate(-4deg); opacity: 0.7; }
+            100% { transform: rotate(4deg); opacity: 1; }
+        }
+        @keyframes rimPulse {
+            0% { opacity: 0.65; }
+            100% { opacity: 1; }
+        }
+        @keyframes highlightDrift {
+            0% { transform: rotate(-8deg) translate(0, 0); opacity: 0.6; }
+            100% { transform: rotate(-5deg) translate(3px, 1px); opacity: 0.9; }
+        }
+        @keyframes reflectShift {
+            0% { opacity: 0.3; transform: translateX(0); }
+            100% { opacity: 0.6; transform: translateX(3px); }
+        }
+        .voice-wave {
+            position: absolute;
+            border-radius: 50%;
+            animation: voiceWaveExpand 3s ease-out infinite;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            border: none;
+            background: radial-gradient(circle, transparent 60%, rgba(140,80,255,0.12) 75%, rgba(140,80,255,0.25) 85%, transparent 100%);
+            box-shadow: 0 0 15px rgba(120,60,255,0.15), inset 0 0 15px rgba(120,60,255,0.08);
+        }
+        .voice-wave:nth-child(1) { width: 140px; height: 140px; animation-delay: 0s; }
+        .voice-wave:nth-child(2) { width: 140px; height: 140px; animation-delay: 0.75s; background: radial-gradient(circle, transparent 60%, rgba(100,120,255,0.1) 75%, rgba(80,100,255,0.2) 85%, transparent 100%); }
+        .voice-wave:nth-child(3) { width: 140px; height: 140px; animation-delay: 1.5s; background: radial-gradient(circle, transparent 60%, rgba(180,60,255,0.08) 75%, rgba(160,40,255,0.18) 85%, transparent 100%); }
+        .voice-wave:nth-child(4) { width: 140px; height: 140px; animation-delay: 2.25s; background: radial-gradient(circle, transparent 60%, rgba(60,140,255,0.08) 75%, rgba(40,120,255,0.16) 85%, transparent 100%); }
+        @keyframes voiceWaveExpand {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+            60% { opacity: 0.4; }
+            100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; }
+        }
+        .voice-glow {
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(120,40,255,0.25) 0%, rgba(80,60,255,0.12) 40%, rgba(40,80,255,0.05) 60%, transparent 75%);
+            box-shadow: 0 0 60px rgba(100,40,255,0.15);
+            animation: voiceGlow 3s ease-in-out infinite alternate;
+            z-index: 1;
+        }
+        @keyframes voiceGlow {
+            0% { transform: scale(0.9); opacity: 0.5; }
+            100% { transform: scale(1.25); opacity: 1; }
         }
 
         .voice-bubble {
@@ -536,26 +738,37 @@
                         <button onclick="setChartType('income')" id="chart-tab-income" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all"><span class="w-1.5 h-1.5 rounded-full bg-finance-income"></span><span class="text-[10px] text-white/35 font-medium" data-i18n="income">收入</span></button>
                     </div>
                 </div>
-                <div class="h-52 relative w-full">
-                    <canvas id="trendChart"></canvas>
+                <div class="h-52 relative w-full" style="overflow:visible">
+                    <canvas id="trendChart" style="overflow:visible"></canvas>
                 </div>
             </div>
 
             <!-- Budget Bars -->
             <div id="budget-bars" style="display:none"></div>
 
-            <!-- Detail List -->
+            <!-- Category Pie Chart -->
             <div class="glass-card p-6 rounded-[24px]">
-                <div class="mb-5">
+                <div class="flex items-center justify-between mb-5">
                     <h3 class="text-[16px] font-normal text-white" data-i18n="cat_title">类别排行</h3>
+                    <div class="flex items-center gap-1 bg-white/5 rounded-full p-0.5">
+                        <button onclick="setPieType('expense')" id="pie-tab-expense" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyber-purple/20 transition-all"><span class="w-1.5 h-1.5 rounded-full bg-cyber-purple"></span><span class="text-[10px] text-white font-medium" data-i18n="expense">支出</span></button>
+                        <button onclick="setPieType('income')" id="pie-tab-income" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all"><span class="w-1.5 h-1.5 rounded-full bg-finance-income"></span><span class="text-[10px] text-white/35 font-medium" data-i18n="income">收入</span></button>
+                    </div>
                 </div>
-                <div id="stats-detail-list" class="space-y-6"></div>
+                <div class="relative flex items-center justify-center" style="height:200px">
+                    <canvas id="pieChart"></canvas>
+                    <div id="pie-center" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
+                        <span class="text-[11px] text-white/40" id="pie-center-label">总支出</span>
+                        <span class="text-[20px] font-bold text-white font-num mt-0.5" id="pie-center-amount">0</span>
+                    </div>
+                </div>
+                <div id="pie-legend" class="mt-5 space-y-3"></div>
             </div>
         </section>
 
         <!-- === 页面 3: AI 对话 === -->
-        <section id="page-chat" class="hidden flex flex-col h-[calc(100dvh-4rem)] relative">
-                        <div id="chat-box" class="flex-1 overflow-y-auto space-y-4 pb-56 no-scrollbar px-1 overscroll-contain"></div>
+        <section id="page-chat" class="hidden flex flex-col h-[calc(100dvh-6.5rem)] relative">
+                        <div id="chat-box" class="flex-1 overflow-y-auto space-y-4 pb-56 no-scrollbar overscroll-contain"></div>
                         <div class="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-10" style="background:linear-gradient(to bottom, transparent, #000 80%)"></div>
         </section>
 
@@ -649,21 +862,21 @@
     </main>
 
     <!-- Chat Input -->
-    <div id="chat-input-wrapper" class="hidden fixed bottom-[108px] left-0 w-full z-30 px-4">
-        <div class="max-w-lg mx-auto mb-2 flex justify-start gap-2 px-1">
-            <button onclick="sendQuickChat('summary')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] text-white/60 hover:bg-white/10 transition-colors">
-                <i data-lucide="file-text" class="w-3 h-3 text-cyber-purple"></i><span data-i18n="summary_btn">月度总结</span>
+    <div id="chat-input-wrapper" class="hidden fixed bottom-[108px] left-0 w-full z-30 px-5">
+        <div class="mb-2 flex justify-start gap-2">
+            <button onclick="sendQuickChat('summary')" class="flex items-center gap-2 px-4 py-2 rounded-full bg-[#110F17] text-[14px] text-white/60 active:scale-95 transition-all">
+                <i data-lucide="file-text" class="w-4 h-4 text-white/40"></i><span data-i18n="summary_btn">月度总结</span>
             </button>
-            <button onclick="sendQuickChat('export')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] text-white/60 hover:bg-white/10 transition-colors">
-                <i data-lucide="download" class="w-3 h-3 text-cyber-purple"></i><span data-i18n="export_btn">导出账单</span>
+            <button onclick="sendQuickChat('export')" class="flex items-center gap-2 px-4 py-2 rounded-full bg-[#110F17] text-[14px] text-white/60 active:scale-95 transition-all">
+                <i data-lucide="download" class="w-4 h-4 text-white/40"></i><span data-i18n="export_btn">导出账单</span>
             </button>
         </div>
-        <div class="max-w-lg mx-auto flex gap-2 items-center bg-[#141416]/95 backdrop-blur-xl p-1.5 pr-1.5 rounded-[24px] shadow-2xl">
-            <button onclick="toggleSpeech()" id="mic-btn" class="w-9 h-9 rounded-full bg-white/5 text-white/60 flex items-center justify-center hover:bg-white/10 transition-all flex-shrink-0 border border-transparent">
-                <i data-lucide="mic" class="w-4 h-4"></i>
+        <div class="flex gap-2 items-center bg-[#141416]/95 backdrop-blur-xl p-1.5 pr-1.5 rounded-[24px] shadow-2xl">
+            <button onclick="toggleSpeech()" id="mic-btn" class="w-9 h-9 rounded-full bg-white/5 text-white flex items-center justify-center hover:bg-white/10 transition-all flex-shrink-0 border border-transparent">
+                <i data-lucide="mic" class="w-5 h-5"></i>
             </button>
             <form onsubmit="handleSend(event)" class="flex-1 relative flex items-center h-9">
-                <input id="chat-input" type="text" placeholder="输入..." data-i18n-placeholder="input_placeholder" class="w-full bg-transparent text-white text-[14px] placeholder:text-white/25 h-full focus:outline-none px-1" autocomplete="off">
+                <input id="chat-input" type="text" placeholder="输入..." data-i18n-placeholder="input_placeholder" class="w-full bg-transparent text-white text-[16px] placeholder:text-white/25 h-full focus:outline-none px-1" autocomplete="off">
                 <button type="submit" class="w-8 h-8 rounded-full bg-cyber-purple flex items-center justify-center text-white active:scale-90 transition-transform ml-1">
                     <i data-lucide="arrow-up" class="w-4 h-4 stroke-[2.5px]"></i>
                 </button>
@@ -762,10 +975,13 @@
     <!-- Filter Category Select Modal (Simple) -->
     <div id="filter-cat-modal" class="fixed inset-0 z-[75] hidden">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeFilterCatModal()"></div>
-        <div class="absolute bottom-0 w-full bg-[#0a0a0c] rounded-t-[32px] border-t border-white/10 animate-slide-up shadow-2xl pb-safe max-h-[70vh] flex flex-col">
+        <div class="absolute bottom-0 w-full bg-[#0a0a0c] rounded-t-[32px] border-t border-white/10 animate-slide-up shadow-2xl pb-safe max-h-[85vh] flex flex-col">
             <div class="p-6 pb-3">
                 <div class="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5"></div>
-                <h3 class="text-lg font-semibold text-white mb-2" data-i18n="select_cat">选择分类</h3>
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-lg font-semibold text-white" data-i18n="select_cat">选择分类</h3>
+                    <button onclick="closeFilterCatModal()" class="flex items-center justify-center"><i data-lucide="x" class="w-5 h-5 text-gray-600"></i></button>
+                </div>
             </div>
             <div class="flex-1 overflow-y-auto px-6 no-scrollbar" id="filter-cat-list"></div>
             <div class="p-6 pt-3">
@@ -804,10 +1020,10 @@
                         <div id="calc-preview" class="absolute right-0 top-1/2 -translate-y-1/2 text-[16px] font-num text-white opacity-0 transition-opacity"></div>
                     </div>
                     <div class="flex gap-2">
-                        <button type="button" onclick="insertOp('+')" class="flex-1 h-9 rounded-full bg-white/5 text-white/50 text-[16px] font-medium active:bg-cyber-purple/20 active:text-white transition-colors">+</button>
-                        <button type="button" onclick="insertOp('-')" class="flex-1 h-9 rounded-full bg-white/5 text-white/50 text-[16px] font-medium active:bg-cyber-purple/20 active:text-white transition-colors">−</button>
-                        <button type="button" onclick="insertOp('*')" class="flex-1 h-9 rounded-full bg-white/5 text-white/50 text-[16px] font-medium active:bg-cyber-purple/20 active:text-white transition-colors">×</button>
-                        <button type="button" onclick="insertOp('/')" class="flex-1 h-9 rounded-full bg-white/5 text-white/50 text-[16px] font-medium active:bg-cyber-purple/20 active:text-white transition-colors">÷</button>
+                        <button type="button" onclick="insertOp('+')" class="flex-1 h-9 rounded-full bg-white/5 text-white/50 text-[22px] font-light active:bg-cyber-purple/20 active:text-white transition-colors">+</button>
+                        <button type="button" onclick="insertOp('-')" class="flex-1 h-9 rounded-full bg-white/5 text-white/50 text-[22px] font-light active:bg-cyber-purple/20 active:text-white transition-colors">−</button>
+                        <button type="button" onclick="insertOp('*')" class="flex-1 h-9 rounded-full bg-white/5 text-white/50 text-[22px] font-light active:bg-cyber-purple/20 active:text-white transition-colors">×</button>
+                        <button type="button" onclick="insertOp('/')" class="flex-1 h-9 rounded-full bg-white/5 text-white/50 text-[22px] font-light active:bg-cyber-purple/20 active:text-white transition-colors">÷</button>
                     </div>
                     <div class="my-5 h-px bg-white/8"></div>
                     <div id="cat-grid" class="grid grid-cols-4 gap-x-2 gap-y-3 max-h-[200px] overflow-y-auto no-scrollbar"></div>
@@ -855,13 +1071,31 @@
                     </div>
                 </div>
                 <div class="flex-1 overflow-y-auto px-6 no-scrollbar">
-                    <div id="book-list" class="grid grid-cols-2 gap-3 mb-4"></div>
-                    <div class="border border-dashed border-white/10 rounded-[12px] p-4 flex items-center gap-3 cursor-pointer active:bg-white/5 transition-colors" onclick="document.getElementById('new-book-name').focus()">
-                        <input type="text" id="new-book-name" data-i18n-placeholder="book_new_placeholder" placeholder="新建账本..." class="flex-1 bg-transparent text-[14px] text-white placeholder:text-white/25 focus:outline-none" onkeydown="if(event.key==='Enter')addBook()">
-                        <button onclick="addBook()" class="text-cyber-purple text-[15px] font-medium px-4 py-2 rounded-full bg-cyber-purple/10 active:scale-95 transition-transform" data-i18n="book_add">添加</button>
+                    <div id="book-list" class="grid grid-cols-2 gap-3"></div>
+                </div>
+                <div class="p-6 border-t border-white/5 bg-[#0a0a0c]">
+                    <div class="flex gap-3 items-center">
+                        <div id="book-icon-btn" onclick="toggleBookIconPicker()" class="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0">
+                            <i data-lucide="book-open" class="w-5 h-5 text-white/60" id="book-icon-preview"></i>
+                        </div>
+                        <input type="text" id="new-book-name" data-i18n-placeholder="book_new_placeholder" placeholder="新建账本..." class="flex-1 bg-white/5 border border-white/10 rounded-[12px] px-4 py-3 text-white text-sm focus:outline-none focus:border-cyber-purple/50 transition-colors" onkeydown="if(event.key==='Enter')addBook()">
+                        <button onclick="addBook()" class="bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-white w-12 h-12 rounded-full flex items-center justify-center active:scale-95 transition-all shadow-[0_8px_24px_-4px_rgba(124,58,237,0.5)] shrink-0">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                        </button>
                     </div>
                 </div>
-                <div class="pb-10"></div>
+            </div>
+            <div id="book-icon-picker-panel" class="absolute inset-0 bg-[#0a0a0c] rounded-t-[32px] z-10 flex flex-col hidden">
+                <div class="p-6 pb-2">
+                    <div class="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5"></div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-white tracking-tight">选择图标</h3>
+                        <button onclick="closeBookIconPicker()" class="flex items-center justify-center"><i data-lucide="x" class="w-5 h-5 text-gray-600"></i></button>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto px-6 pb-10 no-scrollbar">
+                    <div id="book-icon-picker" class="grid grid-cols-5 gap-4"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -876,9 +1110,11 @@
                     <button onclick="closeBookEdit()" class="flex items-center justify-center"><i data-lucide="x" class="w-5 h-5 text-gray-600"></i></button>
                 </div>
                 <div class="space-y-4">
-                    <div>
-                        <label class="text-[12px] text-white/40 mb-1.5 block" data-i18n="book_name_label">账本名称</label>
-                        <input type="text" id="edit-book-name-input" class="w-full bg-white/5 border border-white/10 rounded-[12px] px-4 py-3 text-[15px] text-white placeholder:text-white/25 focus:outline-none focus:border-cyber-purple/50 transition-colors">
+                    <div class="flex gap-3 items-center">
+                        <div id="edit-book-icon-btn" onclick="toggleEditBookIconPicker()" class="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0">
+                            <i data-lucide="book-open" class="w-5 h-5 text-white/60" id="edit-book-icon-preview"></i>
+                        </div>
+                        <input type="text" id="edit-book-name-input" class="flex-1 bg-white/5 border border-white/10 rounded-[12px] px-4 h-12 text-[15px] text-white placeholder:text-white/25 focus:outline-none focus:border-cyber-purple/50 transition-colors">
                     </div>
                     <button onclick="saveBookName()" class="w-full py-3.5 rounded-full bg-cyber-purple text-white text-[15px] font-medium active:scale-95 transition-transform shadow-[0_0_15px_rgba(124,58,237,0.3)]">保存</button>
                 </div>
@@ -887,6 +1123,18 @@
                     <label class="text-[12px] text-white/40 mb-1.5 block" data-i18n="book_delete_confirm_label">输入账本名称以确认删除</label>
                     <input type="text" id="delete-book-confirm-input" oninput="checkDeleteBookInput()" class="w-full bg-white/5 border border-white/10 rounded-[12px] px-4 py-3 text-[15px] text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/50 transition-colors" data-i18n-placeholder="book_delete_confirm_placeholder" placeholder="输入账本名称...">
                     <button id="btn-confirm-delete-book" onclick="confirmDeleteBook()" disabled class="w-full mt-3 py-3.5 rounded-full bg-red-500/20 text-red-400 text-[15px] font-medium active:scale-95 transition-transform disabled:opacity-30 disabled:pointer-events-none" data-i18n="book_delete_btn">删除账本</button>
+                </div>
+            </div>
+            <div id="edit-book-icon-panel" class="absolute inset-0 bg-[#0a0a0c] rounded-t-[32px] z-10 flex flex-col hidden">
+                <div class="p-6 pb-2">
+                    <div class="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5"></div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-white tracking-tight">选择图标</h3>
+                        <button onclick="closeEditBookIconPicker()" class="flex items-center justify-center"><i data-lucide="x" class="w-5 h-5 text-gray-600"></i></button>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto px-6 pb-10 no-scrollbar">
+                    <div id="edit-book-icon-grid" class="grid grid-cols-5 gap-4"></div>
                 </div>
             </div>
         </div>
@@ -985,15 +1233,55 @@
                 </div>
                 <div class="flex-1 overflow-y-auto px-6 no-scrollbar" id="category-list"></div>
                 <div class="p-6 border-t border-white/5 bg-[#0a0a0c]">
-                    <div class="flex gap-3">
+                    <div class="flex gap-3 items-center">
+                        <div id="cat-icon-btn" onclick="toggleCatIconPicker()" class="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center cursor-pointer active:scale-95 transition-all shrink-0">
+                            <i data-lucide="tag" class="w-5 h-5 text-white/60" id="cat-icon-preview"></i>
+                        </div>
                         <input type="text" id="new-cat-name" data-i18n-placeholder="new_cat_placeholder" placeholder="新分类..." class="flex-1 bg-white/5 border border-white/10 rounded-[12px] px-4 py-3 text-white text-sm focus:outline-none focus:border-cyber-purple/50 transition-colors">
-                        <button onclick="addNewCategory()" class="bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-white w-12 h-12 rounded-full flex items-center justify-center active:scale-95 transition-all shadow-[0_8px_24px_-4px_rgba(124,58,237,0.5)]">
+                        <button onclick="addNewCategory()" class="bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-white w-12 h-12 rounded-full flex items-center justify-center active:scale-95 transition-all shadow-[0_8px_24px_-4px_rgba(124,58,237,0.5)] shrink-0">
                             <i data-lucide="plus" class="w-5 h-5"></i>
                         </button>
                     </div>
                 </div>
             </div>
+            <div id="icon-picker-panel" class="absolute inset-0 bg-[#0a0a0c] rounded-t-[32px] z-10 flex flex-col hidden">
+                <div class="p-6 pb-2">
+                    <div class="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5"></div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-white tracking-tight">选择图标</h3>
+                        <button onclick="closeCatIconPicker()" class="flex items-center justify-center"><i data-lucide="x" class="w-5 h-5 text-gray-600"></i></button>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto px-6 pb-10 no-scrollbar">
+                    <div id="icon-picker" class="grid grid-cols-5 gap-4"></div>
+                </div>
+            </div>
         </div>
+    </div>
+
+    <!-- Voice Overlay -->
+    <div id="voice-overlay" onclick="toggleSpeech()">
+        <div class="voice-orb-wrap">
+            <div class="voice-wave"></div>
+            <div class="voice-wave"></div>
+            <div class="voice-wave"></div>
+            <div class="voice-wave"></div>
+            <div class="voice-glow"></div>
+            <div class="voice-orb">
+                <div class="voice-orb-layer l1"></div>
+                <div class="voice-orb-layer l2"></div>
+                <div class="voice-orb-layer l3"></div>
+                <div class="voice-orb-layer l4"></div>
+                <div class="voice-orb-glass"></div>
+                <div class="voice-orb-rim"></div>
+                <div class="voice-orb-highlight"></div>
+                <div class="voice-orb-highlight2"></div>
+                <div class="voice-orb-reflect"></div>
+                <div class="voice-orb-edge"></div>
+            </div>
+        </div>
+        <p class="text-white/60 text-[15px] mt-10" id="voice-overlay-text">正在听...</p>
+        <p class="text-white text-[16px] mt-4 font-normal max-w-[80%] text-center" id="voice-interim-text"></p>
     </div>
 
     <!-- Logic -->
@@ -1003,24 +1291,24 @@
         const SYSTEM_INCOME_KEYS = ['salary', 'bonus', 'investment', 'other_in'];
 
         const DEFAULT_EXPENSE_CATS = {
-            food: { label: '餐饮', color: '#ff9500', icon: 'coffee' },
-            transport: { label: '交通', color: '#00d4ff', icon: 'car' },
-            shopping: { label: '购物', color: '#ec4899', icon: 'shopping-bag' },
-            tech: { label: '数码', color: '#9d46ff', icon: 'cpu' },
-            utilities: { label: '生活', color: '#32d74b', icon: 'home' },
-            entertainment: { label: '娱乐', color: '#ff375f', icon: 'gamepad-2' },
-            other: { label: '其他', color: '#8e8e93', icon: 'package' }
+            food: { label: '餐饮', color: '#8b5cf6', icon: 'coffee' },
+            transport: { label: '交通', color: '#3b82f6', icon: 'car' },
+            shopping: { label: '购物', color: '#10b981', icon: 'shopping-bag' },
+            tech: { label: '游戏', color: '#f97316', icon: 'gamepad-2' },
+            utilities: { label: '生活', color: '#06b6d4', icon: 'home' },
+            entertainment: { label: '娱乐', color: '#ec4899', icon: 'film' },
+            other: { label: '其他', color: '#64748b', icon: 'package' }
         };
         const DEFAULT_INCOME_CATS = {
-            salary: { label: '工资', color: '#00f2ea', icon: 'banknote' },
-            bonus: { label: '奖金', color: '#00d0c8', icon: 'gift' },
-            investment: { label: '理财', color: '#00ffe5', icon: 'trending-up' },
-            other_in: { label: '其他', color: '#00f2ea', icon: 'wallet' }
+            salary: { label: '工资', color: '#0891b2', icon: 'banknote' },
+            bonus: { label: '奖金', color: '#7c3aed', icon: 'gift' },
+            investment: { label: '理财', color: '#2563eb', icon: 'trending-up' },
+            other_in: { label: '其他', color: '#059669', icon: 'wallet' }
         };
         let EXPENSE_CATS = {...DEFAULT_EXPENSE_CATS, ...JSON.parse(localStorage.getItem('custom_expense_cats') || '{}')};
         let INCOME_CATS = {...DEFAULT_INCOME_CATS, ...JSON.parse(localStorage.getItem('custom_income_cats') || '{}')};
 
-        const PRESET_COLORS = ['#ff0055', '#00ff9f', '#00ccff', '#ffcc00', '#ff00cc', '#9d46ff', '#00ffea', '#ff5e00'];
+        const PRESET_COLORS = ['#8b5cf6', '#06b6d4', '#f97316', '#10b981', '#ec4899', '#3b82f6', '#14b8a6', '#ef4444', '#f59e0b', '#6366f1'];
 
         const DEFAULT_BOOKS = [
             { id: 'default', name: '日常', icon: 'wallet', color: '#7c3aed' },
@@ -1055,6 +1343,8 @@
         let amountHidden = localStorage.getItem('amount_hidden') === 'true';
         let currentManageType = 'expense';
         let trendChart = null;
+        let pieChart = null;
+        let currentPieType = 'expense';
         
         // --- NEW: Date Filter Logic ---
         // 'month', 'year', 'day', 'range'
@@ -1077,11 +1367,14 @@
         let pendingAction = null; // {type, payload, message} awaiting confirmation
         let multiTurnState = null; // {step, partial} for multi-turn dialogue
         let chatHistory = []; // last 5 messages for context
-        let catMemory = JSON.parse(localStorage.getItem('cat_memory') || '{}'); // desc→category learning
+        let catMemory = {};
+        localStorage.removeItem('cat_memory');
         function getBudgetKey() { return `budgets_${currentBook}`; }
         function getTotalBudgetKey() { return `total_budget_${currentBook}`; }
         let budgets = JSON.parse(localStorage.getItem(getBudgetKey()) || (currentBook === 'default' ? localStorage.getItem('budgets') : null) || '{}');
         let totalBudget = parseFloat(localStorage.getItem(getTotalBudgetKey()) || (currentBook === 'default' ? localStorage.getItem('total_budget') : null) || '0');
+        if (budgets.total && totalBudget <= 0) { totalBudget = budgets.total; localStorage.setItem(getTotalBudgetKey(), totalBudget); }
+        if (budgets.total) { delete budgets.total; localStorage.setItem(getBudgetKey(), JSON.stringify(budgets)); }
         let shortcuts = JSON.parse(localStorage.getItem('shortcuts') || '{}'); // {keyword: {amount, cat, type, desc}}
         let recurringTxs = JSON.parse(localStorage.getItem('recurringTxs') || '[]');
 
@@ -1122,7 +1415,7 @@
                 stats_title: '收支统计',
                 book_daily: '日常', book_travel: '旅游', book_family: '家庭',
                 book_business: '生意', book_reimburse: '报销', book_company: '公司', book_team: '团队',
-                cat_food: '餐饮', cat_transport: '交通', cat_shopping: '购物', cat_tech: '数码',
+                cat_food: '餐饮', cat_transport: '交通', cat_shopping: '购物', cat_tech: '游戏',
                 cat_utilities: '生活', cat_entertainment: '娱乐', cat_other: '其他',
                 cat_salary: '工资', cat_bonus: '奖金', cat_investment: '理财', cat_other_in: '其他',
                 total_budget: '总预算', save: '保存', add: '添加',
@@ -1172,7 +1465,7 @@
                 ai_guide: 'What would you like to record?\nTry saying:\n\n  "McDonald\'s 25"\n  "Taxi 18.8"\n  "Bought clothes yesterday 199"\n  "How much did I spend this week?"',
                 summary_btn: 'Summary', input_placeholder: 'Type...',
                 cat_manage: 'Categories', export_short: 'Export',
-                filter_month: 'Mon.', filter_3m: '3M', filter_6m: '6M',
+                filter_month: '1M', filter_3m: '3M', filter_6m: '6M',
                 filter_year: '1Y', filter_all: 'All', filter_custom: 'Range',
                 filter_time: 'Date Filter', cancel: 'Cancel', confirm: 'Done',
                 by_month: 'Month', by_year: 'Year', by_day: 'Day', by_range: 'Range',
@@ -1185,7 +1478,7 @@
                 stats_title: 'Statistics',
                 book_daily: 'Daily', book_travel: 'Travel', book_family: 'Family',
                 book_business: 'Business', book_reimburse: 'Reimburse', book_company: 'Company', book_team: 'Team',
-                cat_food: 'Food', cat_transport: 'Transport', cat_shopping: 'Shopping', cat_tech: 'Tech',
+                cat_food: 'Food', cat_transport: 'Transport', cat_shopping: 'Shopping', cat_tech: 'Gaming',
                 cat_utilities: 'Life', cat_entertainment: 'Entertainment', cat_other: 'Other',
                 cat_salary: 'Salary', cat_bonus: 'Bonus', cat_investment: 'Finance', cat_other_in: 'Other',
                 total_budget: 'Total', save: 'Save', add: 'Add',
@@ -1232,7 +1525,7 @@
                 export_btn: 'エクスポート', ai_title: 'AI記帳アシスタント',
                 ai_subtitle: '音声やテキストで記帳・照会・編集・削除',
                 ai_welcome: 'Hi～AI家計簿へようこそ', ai_intro: 'あなたのAI家計簿アシスタントです',
-                ai_guide: '何を記録しますか？\nこう言ってみてください：\n\n　"マクドナルド25元"\n　"タクシー18.8元"\n　"昨日服を買った199"\n　"今週いくら使った？"',
+                ai_guide: '何を記録しますか？\nこう言ってみてください：\n\n　"マクドナルド 25円"\n　"タクシー 18.8円"\n　"昨日服を買った 199"\n　"今週いくら使った？"',
                 summary_btn: '月次まとめ', input_placeholder: '入力...',
                 cat_manage: 'カテゴリ管理', export_short: 'エクスポート',
                 filter_month: '今月', filter_3m: '3ヶ月', filter_6m: '半年',
@@ -1248,7 +1541,7 @@
                 stats_title: '収支統計',
                 book_daily: '日常', book_travel: '旅行', book_family: '家庭',
                 book_business: 'ビジネス', book_reimburse: '経費', book_company: '会社', book_team: 'チーム',
-                cat_food: '食費', cat_transport: '交通', cat_shopping: '買い物', cat_tech: 'デジタル',
+                cat_food: '食費', cat_transport: '交通', cat_shopping: '買い物', cat_tech: 'ゲーム',
                 cat_utilities: '生活', cat_entertainment: '娯楽', cat_other: 'その他',
                 cat_salary: '給料', cat_bonus: 'ボーナス', cat_investment: '資産運用', cat_other_in: 'その他',
                 total_budget: '総予算', save: '保存', add: '追加',
@@ -1287,7 +1580,7 @@
                 theme_label: '다크 모드', data_label: '데이터 관리', data_clear: '모든 데이터 삭제',
                 confirm_clear: '모든 데이터를 삭제하시겠습니까? 복구할 수 없습니다!',
                 greeting_morning: '좋은 아침', greeting_afternoon: '좋은 오후', greeting_evening: '좋은 저녁',
-                month_expense: '이달 지출', month_income: '수입', net: '순수익',
+                month_expense: '이달 지출', month_income: '수입', net: '순수지',
                 recent_bills: '최근 내역', no_records: '기록 없음',
                 add_tx: '추가', budget_btn: '예산',
                 income: '수입', expense: '지출', all: '전체',
@@ -1295,7 +1588,7 @@
                 export_btn: '내보내기', ai_title: 'AI 가계부 도우미',
                 ai_subtitle: '음성이나 텍스트로 기록·조회·수정·삭제',
                 ai_welcome: 'Hi～AI 가계부에 오신 것을 환영합니다', ai_intro: '저는 당신의 AI 가계부 도우미입니다',
-                ai_guide: '무엇을 기록할까요?\n이렇게 말해보세요:\n\n　"맥도날드 25위안"\n　"택시 18.8위안"\n　"어제 옷 구매 199"\n　"이번 주에 얼마 썼어?"',
+                ai_guide: '무엇을 기록할까요?\n이렇게 말해보세요:\n\n　"맥도날드 25원"\n　"택시 18.8원"\n　"어제 옷 구매 199"\n　"이번 주에 얼마 썼어?"',
                 summary_btn: '월간 요약', input_placeholder: '입력...',
                 cat_manage: '카테고리 관리', export_short: '내보내기',
                 filter_month: '이번달', filter_3m: '3개월', filter_6m: '6개월',
@@ -1311,7 +1604,7 @@
                 stats_title: '수지 통계',
                 book_daily: '일상', book_travel: '여행', book_family: '가정',
                 book_business: '사업', book_reimburse: '경비', book_company: '회사', book_team: '팀',
-                cat_food: '식비', cat_transport: '교통', cat_shopping: '쇼핑', cat_tech: '디지털',
+                cat_food: '식비', cat_transport: '교통', cat_shopping: '쇼핑', cat_tech: '게임',
                 cat_utilities: '생활', cat_entertainment: '여가', cat_other: '기타',
                 cat_salary: '급여', cat_bonus: '보너스', cat_investment: '재테크', cat_other_in: '기타',
                 total_budget: '총 예산', save: '저장', add: '추가',
@@ -1569,7 +1862,58 @@
             if (savedCount > 0) {
                 showToast(`${savedCount} ${t('toast_restored')}`, 'info');
             }
+            initSwipeToDismiss();
         };
+
+        function initSwipeToDismiss() {
+            const modalMap = [
+                { id: 'date-filter-modal', close: closeDateFilterModal },
+                { id: 'filter-cat-modal', close: closeFilterCatModal },
+                { id: 'edit-modal', close: closeEditModal },
+                { id: 'lang-modal', close: closeLangPanel },
+                { id: 'book-modal', close: closeBookManager },
+                { id: 'book-edit-modal', close: closeBookEdit },
+                { id: 'avatar-action-modal', close: closeAvatarActions },
+                { id: 'name-modal', close: closeNameModal },
+                { id: 'budget-modal', close: closeBudgetModal },
+                { id: 'category-modal', close: closeCategoryManager },
+            ];
+            modalMap.forEach(({ id, close }) => {
+                const modal = document.getElementById(id);
+                if (!modal) return;
+                const sheet = modal.querySelector('.absolute.bottom-0');
+                if (!sheet) return;
+                let startY = 0, currentY = 0, dragging = false;
+                sheet.addEventListener('touchstart', e => {
+                    const t = e.target.closest('.overflow-y-auto, .no-scrollbar');
+                    if (t && t.scrollTop > 0) return;
+                    startY = e.touches[0].clientY;
+                    currentY = startY;
+                    dragging = true;
+                    sheet.style.transition = 'none';
+                }, { passive: true });
+                sheet.addEventListener('touchmove', e => {
+                    if (!dragging) return;
+                    currentY = e.touches[0].clientY;
+                    const dy = currentY - startY;
+                    if (dy > 0) {
+                        sheet.style.transform = `translateY(${dy}px)`;
+                    }
+                }, { passive: true });
+                sheet.addEventListener('touchend', () => {
+                    if (!dragging) return;
+                    dragging = false;
+                    const dy = currentY - startY;
+                    sheet.style.transition = 'transform 0.3s ease';
+                    if (dy > 80) {
+                        sheet.style.transform = `translateY(100%)`;
+                        setTimeout(() => { close(); sheet.style.transform = ''; }, 300);
+                    } else {
+                        sheet.style.transform = '';
+                    }
+                });
+            });
+        }
 
         function initDatePicker() {
             const now = new Date();
@@ -1714,17 +2058,47 @@
         }
 
         let editingBookId = null;
+        let editBookIcon = 'book-open';
+
         function openBookEdit(id) {
             editingBookId = id;
             const book = books.find(b => b.id === id);
             if (!book) return;
             const isDefault = DEFAULT_BOOKS.some(d => d.id === id);
             const name = getBookName(book);
+            editBookIcon = book.icon || 'book-open';
             document.getElementById('edit-book-name-input').value = name;
+            const iconPreview = document.getElementById('edit-book-icon-preview');
+            if (iconPreview) { iconPreview.setAttribute('data-lucide', editBookIcon); lucide.createIcons(); }
             document.getElementById('delete-book-section').classList.toggle('hidden', isDefault);
             document.getElementById('delete-book-confirm-input').value = '';
             document.getElementById('btn-confirm-delete-book').disabled = true;
             document.getElementById('book-edit-modal').classList.remove('hidden');
+        }
+
+        function toggleEditBookIconPicker() {
+            const panel = document.getElementById('edit-book-icon-panel');
+            if (!panel) return;
+            panel.classList.remove('hidden');
+            const grid = document.getElementById('edit-book-icon-grid');
+            grid.innerHTML = BOOK_ICONS.map(icon => `
+                <div onclick="selectEditBookIcon('${icon}')" class="flex items-center justify-center w-12 h-12 rounded-2xl cursor-pointer transition-colors ${icon === editBookIcon ? 'bg-[#7c3aed]' : 'bg-white/5'}">
+                    <i data-lucide="${icon}" class="w-6 h-6 ${icon === editBookIcon ? 'text-white' : 'text-white/50'}"></i>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function closeEditBookIconPicker() {
+            const panel = document.getElementById('edit-book-icon-panel');
+            if (panel) panel.classList.add('hidden');
+        }
+
+        function selectEditBookIcon(icon) {
+            editBookIcon = icon;
+            const preview = document.getElementById('edit-book-icon-preview');
+            if (preview) { preview.setAttribute('data-lucide', icon); lucide.createIcons(); }
+            closeEditBookIconPicker();
         }
         function closeBookEdit() {
             document.getElementById('book-edit-modal').classList.add('hidden');
@@ -1743,6 +2117,7 @@
             const book = books.find(b => b.id === editingBookId);
             if (book) {
                 book.name = newName;
+                book.icon = editBookIcon;
                 localStorage.setItem('books', JSON.stringify(books));
                 renderBookList();
                 renderBookSelector();
@@ -1765,15 +2140,52 @@
             closeBookEdit();
         }
 
+        const BOOK_ICONS = ['book-open','wallet','briefcase','shopping-bag','plane','home','heart','car','gamepad-2','music','film','dumbbell','coffee','gift','star','crown','gem','leaf','flower-2','paw-print','baby','graduation-cap','building','store','banknote','trending-up','sparkles','zap'];
+        let selectedBookIcon = 'book-open';
+
+        function toggleBookIconPicker() {
+            const panel = document.getElementById('book-icon-picker-panel');
+            if (!panel) return;
+            panel.classList.remove('hidden');
+            renderBookIconPicker();
+        }
+
+        function closeBookIconPicker() {
+            const panel = document.getElementById('book-icon-picker-panel');
+            if (panel) panel.classList.add('hidden');
+        }
+
+        function renderBookIconPicker() {
+            const grid = document.getElementById('book-icon-picker');
+            if (!grid) return;
+            grid.innerHTML = BOOK_ICONS.map(icon => `
+                <div onclick="selectBookIcon('${icon}')" class="flex items-center justify-center w-12 h-12 rounded-2xl cursor-pointer transition-colors ${icon === selectedBookIcon ? 'bg-[#7c3aed]' : 'bg-white/5'}" data-book-icon-key="${icon}">
+                    <i data-lucide="${icon}" class="w-6 h-6 ${icon === selectedBookIcon ? 'text-white' : 'text-white/50'}"></i>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function selectBookIcon(icon) {
+            selectedBookIcon = icon;
+            const preview = document.getElementById('book-icon-preview');
+            if (preview) { preview.setAttribute('data-lucide', icon); lucide.createIcons(); }
+            closeBookIconPicker();
+        }
+
         function addBook() {
             const name = document.getElementById('new-book-name').value.trim();
             if (!name) { showToast(t('enter_book_name'), 'error'); return; }
             const id = 'book_' + Date.now();
             const firstNonCustomIdx = books.findIndex((b, i) => i > 0 && DEFAULT_BOOKS.some(d => d.id === b.id));
             const insertIdx = firstNonCustomIdx > 0 ? firstNonCustomIdx : books.length;
-            books.splice(insertIdx, 0, { id, name, icon: 'book-open', color: PRESET_COLORS[books.length % PRESET_COLORS.length] });
+            books.splice(insertIdx, 0, { id, name, icon: selectedBookIcon, color: PRESET_COLORS[books.length % PRESET_COLORS.length] });
             localStorage.setItem('books', JSON.stringify(books));
             document.getElementById('new-book-name').value = '';
+            selectedBookIcon = 'book-open';
+            closeBookIconPicker();
+            const bookPreview = document.getElementById('book-icon-preview');
+            if (bookPreview) { bookPreview.setAttribute('data-lucide', 'book-open'); lucide.createIcons(); }
             renderBookList();
             renderBookSelector();
             showToast(`${t('book_created')}「${name}」`);
@@ -2039,7 +2451,7 @@
             ];
             msgs.forEach(m => {
                 setTimeout(() => {
-                    box.innerHTML += `<div class="flex justify-start mb-4 animate-fade-in"><div class="glass-card text-white/90 px-4 py-3 rounded-[24px] rounded-tl-sm text-sm border border-white/10 shadow-lg whitespace-pre-line">${m.text}</div></div>`;
+                    box.innerHTML += `<div class="flex justify-start mb-4 animate-fade-in"><div class="glass-card text-white/90 px-4 py-3 rounded-[24px] rounded-tl-sm text-[16px] border border-white/10 shadow-lg whitespace-pre-line">${m.text}</div></div>`;
                     box.scrollTop = box.scrollHeight;
                     lucide.createIcons();
                 }, m.delay);
@@ -2180,6 +2592,9 @@
                 }
             });
 
+            // Reset scroll to top on tab switch
+            window.scrollTo(0, 0);
+
             const chatInput = document.getElementById('chat-input-wrapper');
             if (page === 'chat') {
                 chatInput.classList.remove('hidden'); initChatWelcome();
@@ -2198,7 +2613,6 @@
         // --- Chart & Stats Logic ---
         function renderCharts() {
             const ctx = document.getElementById('trendChart').getContext('2d');
-            const list = document.getElementById('stats-detail-list');
 
             let now = new Date();
             let startDate = new Date(0);
@@ -2269,69 +2683,104 @@
             const sortedCats = Object.keys(catTotals).sort((a,b) => catTotals[b] - catTotals[a]);
             const sortedIncomeCats = Object.keys(incomeCatTotals).sort((a,b) => incomeCatTotals[b] - incomeCatTotals[a]);
 
-            list.innerHTML = '';
-            if (sortedCats.length === 0 && sortedIncomeCats.length === 0) {
-                list.innerHTML = `<div class="flex flex-col items-center justify-center py-10 gap-3">
-                    <i data-lucide="bar-chart-3" class="w-8 h-8 text-white/20"></i>
-                    <p class="text-white/35 text-xs">${t('no_stats_data')}</p>
+            // --- Pie Chart (Rounded Arc Style) ---
+            const pieCanvas = document.getElementById('pieChart');
+            const pieLegend = document.getElementById('pie-legend');
+            const pieCenterLabel = document.getElementById('pie-center-label');
+            const pieCenterAmount = document.getElementById('pie-center-amount');
+
+            const isExpensePie = currentPieType === 'expense';
+            const pieCats = isExpensePie ? sortedCats : sortedIncomeCats;
+            const pieTotals = isExpensePie ? catTotals : incomeCatTotals;
+            const pieTotal = isExpensePie ? totalExpense : totalIncome;
+            const pieCatMap = isExpensePie ? EXPENSE_CATS : INCOME_CATS;
+
+            pieCenterLabel.textContent = isExpensePie ? t('expense') : t('income');
+            pieCenterAmount.textContent = pieTotal > 0 ? pieTotal.toLocaleString() : '0';
+
+            if (pieChart) { pieChart.destroy(); pieChart = null; }
+
+            if (pieCats.length === 0) {
+                pieLegend.innerHTML = `<div class="flex flex-col items-center justify-center py-6 gap-2">
+                    <i data-lucide="pie-chart" class="w-7 h-7 text-white/15"></i>
+                    <p class="text-white/30 text-xs">${t('no_stats_data')}</p>
                 </div>`;
                 lucide.createIcons();
             } else {
-                if (sortedCats.length > 0) {
-                    list.innerHTML += `<div class="text-[12px] font-normal text-white/60 mb-3">${t('expense_section')}</div>`;
-                    sortedCats.forEach(catKey => {
-                        const amt = catTotals[catKey];
-                        const percent = totalExpense > 0 ? ((amt / totalExpense) * 100).toFixed(1) : 0;
-                        const catInfo = EXPENSE_CATS[catKey] || { label: '?', color: '#999', icon: 'help-circle' };
-                        list.innerHTML += `
-                            <div class="relative group cursor-default mb-4">
-                                 <div class="flex items-center justify-between relative z-10 mb-1.5">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-full flex items-center justify-center bg-white/5 border border-white/5" style="color: ${catInfo.color}">
-                                            <i data-lucide="${catInfo.icon}" class="w-4 h-4"></i>
-                                        </div>
-                                        <span class="text-sm font-medium text-white/60">${t('cat_' + catKey) || catInfo.label}</span>
-                                    </div>
-                                    <div class="text-right">
-                                         <span class="block text-sm font-bold text-white font-num">${amt.toLocaleString()}</span>
-                                         <span class="text-[10px] text-white/35 font-num">${percent}%</span>
-                                    </div>
-                                </div>
-                                <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                                    <div class="h-full rounded-full" style="width: ${percent}%; background-color: ${catInfo.color}"></div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                }
-                if (sortedIncomeCats.length > 0) {
-                    list.innerHTML += `<div class="text-[12px] font-normal text-white/60 mb-3 mt-6">${t('income_section')}</div>`;
-                    sortedIncomeCats.forEach(catKey => {
-                        const amt = incomeCatTotals[catKey];
-                        const percent = totalIncome > 0 ? ((amt / totalIncome) * 100).toFixed(1) : 0;
-                        const catInfo = INCOME_CATS[catKey] || { label: '?', color: '#10b981', icon: 'wallet' };
-                        list.innerHTML += `
-                            <div class="relative group cursor-default mb-4">
-                                 <div class="flex items-center justify-between relative z-10 mb-1.5">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-full flex items-center justify-center bg-white/5 border border-white/5" style="color: ${catInfo.color}">
-                                            <i data-lucide="${catInfo.icon}" class="w-4 h-4"></i>
-                                        </div>
-                                        <span class="text-sm font-medium text-white/60">${t('cat_' + catKey) || catInfo.label}</span>
-                                    </div>
-                                    <div class="text-right">
-                                         <span class="block text-sm font-bold text-teal-neon font-num">${amt.toLocaleString()}</span>
-                                         <span class="text-[10px] text-white/35 font-num">${percent}%</span>
-                                    </div>
-                                </div>
-                                <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                                    <div class="h-full rounded-full" style="width: ${percent}%; background-color: ${catInfo.color}"></div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                }
-                lucide.createIcons();
+                const pieColors = pieCats.map(k => (pieCatMap[k] || {}).color || '#666');
+                const pieData = pieCats.map(k => pieTotals[k]);
+                const pieLabels = pieCats.map(k => t('cat_' + k) || (pieCatMap[k] || {}).label || k);
+
+                pieChart = new Chart(pieCanvas.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: pieLabels,
+                        datasets: [{
+                            data: pieData,
+                            backgroundColor: pieColors,
+                            borderColor: 'transparent',
+                            borderWidth: 0,
+                            hoverBorderColor: 'rgba(255,255,255,0.15)',
+                            hoverBorderWidth: 2,
+                            borderRadius: 2,
+                            spacing: 2,
+                            pointStyle: 'circle'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        layout: { padding: 6 },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#1a1a2e',
+                                borderColor: 'transparent',
+                                borderWidth: 0,
+                                titleFont: { size: 14, weight: '400' },
+                                bodyFont: { size: 14, weight: '400' },
+                                padding: 12,
+                                cornerRadius: 12,
+                                displayColors: true,
+                                boxWidth: 10,
+                                boxHeight: 10,
+                                boxPadding: 6,
+                                usePointStyle: true,
+                                pointStyleWidth: 10,
+                                position: 'average',
+                                xAlign: 'center',
+                                yAlign: 'top',
+                                multiKeyBackground: 'transparent',
+                                callbacks: {
+                                    label: function(ctx) {
+                                        const val = ctx.parsed;
+                                        const pct = pieTotal > 0 ? ((val / pieTotal) * 100).toFixed(1) : 0;
+                                        return ` ${val.toLocaleString()}  (${pct}%)`;
+                                    }
+                                }
+                            }
+                        },
+                        animation: {
+                            animateRotate: true,
+                            duration: 800,
+                            easing: 'easeOutQuart'
+                        }
+                    }
+                });
+
+                pieLegend.innerHTML = pieCats.map((catKey) => {
+                    const amt = pieTotals[catKey];
+                    const percent = pieTotal > 0 ? ((amt / pieTotal) * 100).toFixed(1) : 0;
+                    const catInfo = pieCatMap[catKey] || { label: '?', color: '#666', icon: 'tag' };
+                    const catName = t('cat_' + catKey) || catInfo.label;
+                    return `<div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-[4px] flex-shrink-0" style="background:${catInfo.color}"></div>
+                        <span class="text-[14px] font-normal text-white/60 flex-1 truncate">${catName}</span>
+                        <span class="text-[14px] font-normal text-white font-num">${amt.toLocaleString()}</span>
+                        <span class="text-[14px] font-normal text-white/30 font-num w-[40px] text-right">${percent}%</span>
+                    </div>`;
+                }).join('');
             }
 
             let labels = [];
@@ -2418,7 +2867,8 @@
                         pointRadius: 0,
                         pointHoverRadius: 5,
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        clip: false
                     } : {
                         label: ai('income_label'),
                         data: incomePoints,
@@ -2431,12 +2881,14 @@
                         pointRadius: 0,
                         pointHoverRadius: 5,
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        clip: false
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: { padding: { top: 10, left: 6, right: 6, bottom: 0 } },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -2469,8 +2921,15 @@
                                 el.innerHTML = `<div style="font-weight:600;font-size:13px;margin-bottom:2px">${title}</div>${body}`;
                                 el.style.opacity = '1';
                                 const pos = context.chart.canvas.getBoundingClientRect();
-                                el.style.left = pos.left + window.scrollX + tooltip.caretX + 'px';
-                                el.style.top = pos.top + window.scrollY + tooltip.caretY - el.offsetHeight - 8 + 'px';
+                                let ttLeft = pos.left + window.scrollX + tooltip.caretX;
+                                let ttTop = pos.top + window.scrollY + tooltip.caretY - el.offsetHeight - 8;
+                                const vw = window.innerWidth;
+                                const elW = el.offsetWidth;
+                                if (ttLeft + elW > vw - 8) ttLeft = vw - elW - 8;
+                                if (ttLeft < 8) ttLeft = 8;
+                                if (ttTop < window.scrollY + 8) ttTop = pos.top + window.scrollY + tooltip.caretY + 12;
+                                el.style.left = ttLeft + 'px';
+                                el.style.top = ttTop + 'px';
                             }
                         }
                     },
@@ -2571,97 +3030,124 @@
         function closeFilterCatModal() { document.getElementById('filter-cat-modal').classList.add('hidden'); }
 
         // --- Speech ---
+        let speechRunning = false;
+        let speechActive = false;
+        let silenceTimer = null;
+        let lastInterim = '';
+
+        function finishSpeech(text) {
+            if (!text || !speechActive) return;
+            speechActive = false;
+            isListening = false;
+            lastInterim = '';
+            if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
+            document.getElementById('mic-btn').classList.remove('mic-active');
+            hideVoiceOverlay();
+            if (document.getElementById('page-chat').classList.contains('hidden')) {
+                switchTab('chat');
+            }
+            addVoiceBubble(text);
+            const box = document.getElementById('chat-box');
+            setTimeout(() => {
+                 const aiRes = processAI(text);
+                 box.innerHTML += `<div class="flex justify-start mb-4"><div class="glass-card text-white/90 px-4 py-3 rounded-[24px] rounded-tl-sm text-[16px] border border-white/10 shadow-lg ">${aiRes}</div></div>`;
+                 box.scrollTop = box.scrollHeight;
+                 lucide.createIcons();
+            }, 800);
+        }
+
+        function resetSilenceTimer() {
+            if (silenceTimer) clearTimeout(silenceTimer);
+            silenceTimer = setTimeout(() => {
+                if (speechActive && lastInterim) {
+                    finishSpeech(lastInterim);
+                    lastInterim = '';
+                }
+            }, 1500);
+        }
+
         function initSpeech() {
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRecognition();
                 const langMap = {zh:'zh-CN', en:'en-US', ja:'ja-JP', ko:'ko-KR'};
                 recognition.lang = langMap[currentLang] || 'zh-CN';
-                recognition.continuous = false;
+                recognition.continuous = true;
                 recognition.interimResults = true;
 
                 recognition.onend = function() {
-                    isListening = false;
-                    if (!isRecordingFallback) {
-                        const btn = document.getElementById('mic-btn');
-                        btn.classList.remove('mic-active');
+                    speechRunning = false;
+                    if (speechActive && lastInterim) {
+                        finishSpeech(lastInterim);
+                        lastInterim = '';
+                    } else {
+                        isListening = false;
+                        document.getElementById('mic-btn').classList.remove('mic-active');
+                        hideVoiceOverlay();
                     }
-                    document.getElementById('chat-input').placeholder = t('input_placeholder');
                 };
 
                 recognition.onresult = function(event) {
+                    if (!speechActive) return;
                     let finalTranscript = '';
+                    let interimTranscript = '';
                     for (let i = event.resultIndex; i < event.results.length; ++i) {
                         if (event.results[i].isFinal) {
                             finalTranscript += event.results[i][0].transcript;
+                        } else {
+                            interimTranscript += event.results[i][0].transcript;
                         }
                     }
+                    const interimEl = document.getElementById('voice-interim-text');
+                    if (interimEl) interimEl.innerText = interimTranscript || finalTranscript;
                     if (finalTranscript) {
-                        if (document.getElementById('page-chat').classList.contains('hidden')) {
-                            switchTab('chat');
-                        }
-                        addVoiceBubble(finalTranscript);
-                        const box = document.getElementById('chat-box');
-                        setTimeout(() => {
-                             const aiRes = processAI(finalTranscript);
-                             box.innerHTML += `<div class="flex justify-start mb-4"><div class="glass-card text-white/90 px-4 py-3 rounded-[24px] rounded-tl-sm text-sm border border-white/10 shadow-lg ">${aiRes}<div class="text-[9px] text-white/25 mt-1">${chatTime()}</div></div></div>`;
-                             box.scrollTop = box.scrollHeight;
-                        }, 800);
+                        finishSpeech(finalTranscript);
+                    } else if (interimTranscript) {
+                        lastInterim = interimTranscript;
+                        resetSilenceTimer();
                     }
                 };
             }
         }
 
+        function showVoiceOverlay() {
+            const overlay = document.getElementById('voice-overlay');
+            if (overlay) {
+                overlay.classList.add('active');
+                document.getElementById('voice-interim-text').innerText = '';
+            }
+        }
+        function hideVoiceOverlay() {
+            const overlay = document.getElementById('voice-overlay');
+            if (overlay) overlay.classList.remove('active');
+        }
+
         function toggleSpeech() {
-            if (isRecordingFallback) {
-                stopFallbackRecording();
+            if (speechActive || isListening) {
+                speechActive = false;
+                isListening = false;
+                lastInterim = '';
+                if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
+                document.getElementById('mic-btn').classList.remove('mic-active');
+                hideVoiceOverlay();
                 return;
             }
-            if (isListening) {
-                if (recognition) recognition.stop();
-                return;
-            }
-            if (recognition) {
-                let speechStarted = false;
-                let fallbackTimer = null;
-                recognition.onstart = function() {
-                    speechStarted = true;
-                    if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
-                    isListening = true;
-                    const btn = document.getElementById('mic-btn');
-                    btn.classList.add('mic-active');
-                    document.getElementById('chat-input').placeholder = t('input_placeholder');
-                };
-                recognition.onerror = function(event) {
-                    if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
-                    isListening = false;
-                    const btn = document.getElementById('mic-btn');
-                    btn.classList.remove('mic-active');
-                    if (event.error === 'not-allowed' || event.error === 'service-not-available' || event.error === 'network') {
-                        startFallbackRecording();
-                    } else {
-                        startFallbackRecording();
-                    }
-                };
+            if (!recognition) return;
+            speechActive = true;
+            isListening = true;
+            lastInterim = '';
+            document.getElementById('mic-btn').classList.add('mic-active');
+            showVoiceOverlay();
+            if (!speechRunning) {
                 try {
                     recognition.start();
-                    if (usesFallbackSpeech()) {
-                        fallbackTimer = setTimeout(() => {
-                            if (!speechStarted) {
-                                recognition.onend = null;
-                                try { recognition.abort(); } catch(e) {}
-                                isListening = false;
-                                startFallbackRecording();
-                            }
-                        }, 1500);
-                    }
+                    speechRunning = true;
                 } catch(e) {
+                    speechActive = false;
                     isListening = false;
                     document.getElementById('mic-btn').classList.remove('mic-active');
-                    startFallbackRecording();
+                    hideVoiceOverlay();
                 }
-            } else {
-                startFallbackRecording();
             }
         }
 
@@ -2703,6 +3189,24 @@
             return window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
         }
 
+        let cachedAudioStream = null;
+        let micPermissionGranted = false;
+        async function getAudioStream() {
+            if (cachedAudioStream && cachedAudioStream.active) {
+                return cachedAudioStream.clone();
+            }
+            cachedAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            micPermissionGranted = true;
+            return cachedAudioStream.clone();
+        }
+        async function prewarmMic() {
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+                cachedAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                micPermissionGranted = true;
+            } catch(e) {}
+        }
+
         async function startFallbackRecording() {
             const apiKey = localStorage.getItem('gemini_api_key');
             if (!apiKey) {
@@ -2715,7 +3219,7 @@
                 return;
             }
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const stream = await getAudioStream();
                 let mimeType = 'audio/mp4';
                 if (typeof MediaRecorder.isTypeSupported === 'function') {
                     if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
@@ -2730,13 +3234,14 @@
 
                 const btn = document.getElementById('mic-btn');
                 btn.classList.add('mic-active');
-                showToast(currentLang==='zh'?'录音中...再点停止':'Recording... tap to stop');
+                showVoiceOverlay();
 
                 mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
                 mediaRecorder.onstop = async () => {
                     stream.getTracks().forEach(tr => tr.stop());
                     btn.classList.remove('mic-active');
                     isRecordingFallback = false;
+                    hideVoiceOverlay();
                     if (audioChunks.length === 0) {
                         showToast(currentLang==='zh'?'未录到声音':'No audio captured', 'error');
                         return;
@@ -2746,9 +3251,9 @@
                     await transcribeWithGemini(audioBlob, mimeType);
                 };
                 mediaRecorder.onerror = (e) => {
-                    stream.getTracks().forEach(tr => tr.stop());
                     btn.classList.remove('mic-active');
                     isRecordingFallback = false;
+                    hideVoiceOverlay();
                     showToast(currentLang==='zh'?'录音出错':'Recording error', 'error');
                 };
                 mediaRecorder.start(1000);
@@ -2798,7 +3303,7 @@
                     const box = document.getElementById('chat-box');
                     setTimeout(() => {
                         const aiRes = processAI(text);
-                        box.innerHTML += `<div class="flex justify-start mb-4"><div class="glass-card text-white/90 px-4 py-3 rounded-[24px] rounded-tl-sm text-sm border border-white/10 shadow-lg">${aiRes}<div class="text-[9px] text-white/25 mt-1">${chatTime()}</div></div></div>`;
+                        box.innerHTML += `<div class="flex justify-start mb-4"><div class="glass-card text-white/90 px-4 py-3 rounded-[24px] rounded-tl-sm text-[16px] border border-white/10 shadow-lg">${aiRes}</div></div>`;
                         box.scrollTop = box.scrollHeight;
                     }, 800);
                 } else {
@@ -2927,6 +3432,18 @@
                 end = new Date(now); end.setHours(23,59,59,999);
                 label = "最近一周"; matchedStr = m2[0];
             }
+            else if (text.match(/(本周|这周|上周|周)([一二三四五六日天])/)) {
+                const wm = text.match(/(本周|这周|上周|周)([一二三四五六日天])/);
+                const dayMap = {'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'日':0,'天':0};
+                const targetDay = dayMap[wm[2]];
+                let base = wm[1] === '上周' ? new Date(now.getTime() - 7*86400000) : now;
+                const monday = getMonday(base);
+                const offset = targetDay === 0 ? 6 : targetDay - 1;
+                start = new Date(monday.getTime() + offset * 86400000);
+                start.setHours(0,0,0,0);
+                end = new Date(start); end.setHours(23,59,59,999);
+                label = wm[0]; matchedStr = wm[0];
+            }
             else if (text.includes("本周") || text.includes("这周")) {
                 start = getMonday(now);
                 end = new Date(now);
@@ -2967,18 +3484,22 @@
         }
 
         function parseCategoryForAI(text) {
-             // 1. Check learned category memory first
+             const _se = s => s.replace(/[\u{1F300}-\u{1FAD6}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, '').trim();
+             // 1. Exact category label match (highest priority)
+             const allCats = {...EXPENSE_CATS, ...INCOME_CATS};
+             const textNoNum = text.replace(/[\d.]+/g, '').replace(/(花了|买了|块钱|块|元)/g, '').trim();
+             for(let key in allCats) {
+                const lb = allCats[key].label;
+                const lbNoEmoji = _se(lb);
+                if (textNoNum === lb || textNoNum === lbNoEmoji || text.includes(lb) || text.includes(lbNoEmoji)) return { key, ...allCats[key] };
+             }
+             // 2. Check learned category memory
              for (let keyword in catMemory) {
                  if (text.includes(keyword)) {
                      const catKey = catMemory[keyword];
                      const catObj = EXPENSE_CATS[catKey] || INCOME_CATS[catKey];
                      if (catObj) return { key: catKey, ...catObj };
                  }
-             }
-             // 2. Exact category label match
-             const allCats = {...EXPENSE_CATS, ...INCOME_CATS};
-             for(let key in allCats) {
-                if(text.includes(allCats[key].label)) return { key, ...allCats[key] };
              }
              // 3. Brand/keyword database
              const BRAND_MAP = {
@@ -2987,7 +3508,7 @@
                  shopping: ['淘宝','京东','超市','商场','购物','拼多多','天猫','闲鱼','得物','唯品会','1688','小红书','抖音商城','快手','沃尔玛','永辉','大润发','物美','全家','711','便利蜂','罗森','优衣库','ZARA','H&M','Nike','Adidas','李宁','安踏','衣服','裤子','鞋','包','化妆品','护肤品','口红','香水','日用品','纸巾','洗衣液','牙膏'],
                  entertainment: ['电影','游戏','KTV','酒吧','门票','演唱会','话剧','展览','密室','剧本杀','台球','网吧','Steam','Switch','PS5','Xbox','爱奇艺','优酷','腾讯视频','B站','Netflix','Spotify','网易云','QQ音乐','健身','游泳','瑜伽','球','羽毛球','篮球','足球','旅游','酒店','民宿','景区','迪士尼','环球影城','欢乐谷'],
                  utilities: ['水电','电费','水费','燃气','房租','物业','话费','网费','充值','宽带','有线','暖气','快递','维修','保洁','洗衣','理发','美容','医院','看病','药','体检','保险','挂号','牙','配眼镜','学费','培训','课程','书','考试','证件','签证','罚款','税'],
-                 tech: ['手机','电脑','耳机','键盘','iPad','平板','显示器','鼠标','充电器','数据线','U盘','硬盘','相机','无人机','智能手表','Apple','华为','小米','OPPO','vivo','三星','联想','戴尔','MacBook','iPhone','AirPods']
+                 tech: ['游戏','Steam','Switch','PS5','Xbox','手游','网游','充值','点卡','皮肤','战令','月卡','氪金','抽卡','原神','王者荣耀','和平精英','英雄联盟','LOL','米哈游','腾讯游戏','网易游戏','任天堂','PlayStation','Epic','暴雪','EA','育碧']
              };
              for (let cat in BRAND_MAP) {
                  if (BRAND_MAP[cat].some(k => text.includes(k))) return { key: cat, ...EXPENSE_CATS[cat] };
@@ -3001,6 +3522,8 @@
 
         function learnCategory(desc, catKey) {
             if (!desc || desc.length < 2 || desc.length > 8) return;
+            const allLabels = Object.values({...EXPENSE_CATS, ...INCOME_CATS}).map(c => c.label);
+            if (allLabels.includes(desc)) return;
             catMemory[desc] = catKey;
             localStorage.setItem('cat_memory', JSON.stringify(catMemory));
         }
@@ -3021,10 +3544,10 @@
             const budget = budgets[cat];
             const catLabel = t('cat_' + cat) || (EXPENSE_CATS[cat] || {label:cat}).label;
             if (spent > budget) {
-                return `<br><span class="text-finance-rise text-xs">⚠️ ${catLabel} ${t('budget_over') || '已超预算'}！${spent.toLocaleString()} / ${budget.toLocaleString()}</span>`;
+                return `<br><span class="text-[#e84393] text-xs"><i data-lucide="alert-triangle" class="w-3 h-3 inline-block"></i> ${catLabel} ${t('budget_over') || '已超预算'}！${spent.toLocaleString()} / ${budget.toLocaleString()}</span>`;
             } else if (spent > budget * 0.8) {
                 const remain = budget - spent;
-                return `<br><span class="text-yellow-400 text-xs">💡 ${catLabel} ${t('budget_warning') || '预算剩余'}${remain.toLocaleString()}</span>`;
+                return `<br><span class="text-[#e84393] text-xs"><i data-lucide="alert-circle" class="w-3 h-3 inline-block"></i> ${catLabel} ${t('budget_warning') || '预算剩余'}${remain.toLocaleString()}</span>`;
             }
             return '';
         }
@@ -3042,7 +3565,7 @@
                     : currentLang === 'en' ? `This is ${ratio}x the recent average for this category. Correct amount?`
                     : currentLang === 'ja' ? `このカテゴリの最近の平均の${ratio}倍です。金額は正しいですか？`
                     : `이 카테고리 최근 평균의 ${ratio}배입니다. 금액이 맞나요?`;
-                return `<br><span class="text-yellow-400 text-xs">📊 ${msg}</span>`;
+                return `<br><span class="text-[#e84393] text-xs"><i data-lucide="trending-up" class="w-3 h-3 inline-block"></i> ${msg}</span>`;
             }
             return '';
         }
@@ -3055,35 +3578,39 @@
                     : currentLang === 'en' ? `"${desc}" recorded ${similar.length} times with same amount. Say "set shortcut ${desc}" for quick entry`
                     : currentLang === 'ja' ? `「${desc}」同額${similar.length}回記録。「ショートカット設定 ${desc}」で次回から簡単に`
                     : `"${desc}" 동일 금액 ${similar.length}회 기록. "바로가기 설정 ${desc}"로 빠른 입력`;
-                return `<br><span class="text-white/60 text-xs">💡 ${tip}</span>`;
+                return `<br><span class="text-white/60 text-xs"><i data-lucide="zap" class="w-3 h-3 inline-block"></i> ${tip}</span>`;
             }
             return '';
         }
 
         function parseCnNumber(str) {
-            const cnMap = {'零':0,'一':1,'二':2,'两':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10,'百':100,'千':1000,'万':10000};
-            const m = str.match(/[零一二两三四五六七八九十百千万]+/);
+            const cnMap = {'零':0,'一':1,'二':2,'两':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10,'百':100,'千':1000,'万':10000,'亿':100000000};
+            const m = str.match(/[零一二两三四五六七八九十百千万亿半]+/);
             if (!m) return 0;
             const s = m[0];
-            let result = 0, current = 0, lastUnit = 1;
+            let yi = 0, wan = 0, section = 0, current = 0, lastHighUnit = 0;
             for (let i = 0; i < s.length; i++) {
-                const v = cnMap[s[i]];
+                const c = s[i];
+                if (c === '半') { current = 0.5; continue; }
+                const v = cnMap[c];
                 if (v === undefined) return 0;
-                if (v >= 10) {
-                    if (current === 0 && v === 10) current = 1;
-                    result += current * v;
-                    current = 0;
-                    lastUnit = v;
+                if (v === 100000000) {
+                    yi = (yi + wan + section + current) * v;
+                    wan = 0; section = 0; current = 0; lastHighUnit = v;
+                } else if (v === 10000) {
+                    wan = (wan + section + current) * v;
+                    section = 0; current = 0; lastHighUnit = v;
+                } else if (v >= 10) {
+                    section += (current || 1) * v;
+                    current = 0; lastHighUnit = v;
                 } else {
                     current = v;
                 }
             }
-            if (current > 0 && lastUnit > 1) {
-                result += current * (lastUnit / 10);
-            } else {
-                result += current;
+            if (current > 0 && current < 10 && lastHighUnit >= 100) {
+                return yi + wan + section + current * (lastHighUnit / 10);
             }
-            return result;
+            return yi + wan + section + current;
         }
 
         const aiMsg = {
@@ -3112,7 +3639,7 @@
                 ask_amount: (cat) => `记${cat}，金额多少？`,
                 income_label: '收入', expense_label: '支出',
                 deleted_single: (date, desc, amt) => `已删除：${date} 的 "${desc}" ${amt}<br><span class="text-white/35 text-xs">说"撤回"可恢复</span>`,
-                will_delete: (count, scope, total) => `即将删除 <span class="text-xl font-bold font-num text-white">${count}</span> 条记录（${scope}，合计 ${total}）<br><span class="text-yellow-400 text-xs">回复"确认"执行，或"取消"放弃</span>`,
+                will_delete: (count, scope, total) => `即将删除 <span class="text-xl font-bold font-num text-white">${count}</span> 条记录（${scope}，合计 ${total}）<br><span class="text-[#e84393] text-xs">回复"确认"执行，或"取消"放弃</span>`,
                 query_result: (timeStr, catStr, typeStr, total) => `${timeStr}${catStr}总${typeStr} <span class="text-xl font-bold font-num text-white">${total}</span>`,
                 query_no_data: (timeStr, catStr, typeStr) => `${timeStr}没有找到${catStr}相关的${typeStr}记录。`,
                 modified_last: (changes) => `已修改上一条：${changes}`,
@@ -3122,16 +3649,16 @@
                 recurring_cancelled: (desc, amt) => `已取消自动记账："${desc}" ${amt}`,
                 recurring_list_title: '当前自动记账规则：',
                 freq_monthly: '每月', freq_weekly: '每周', freq_daily: '每天',
-                shortcut_used: (desc, amt) => `⚡ 快捷记账：${desc} <span class="text-teal-neon font-num">${amt}</span>`,
+                shortcut_used: (desc, amt) => `快捷记账：${desc} <span class="text-teal-neon font-num">${amt}</span>`,
                 shortcut_set: (keyword, desc, amt) => `已设置快捷：说"${keyword}"将自动记录 ${desc} ${amt}`,
                 shortcut_empty: '当前没有快捷记账。',
                 shortcut_list_title: '快捷记账列表：',
                 last_record: (keyword, date, desc, amt) => `上次${keyword}：${date} "${desc}" <span class="text-white font-num font-bold">${amt}</span>`,
                 not_found_keyword: (keyword) => `没有找到"${keyword}"相关的记录。`,
-                insight_title: '📈 消费洞察',
+                insight_title: '消费洞察',
                 insight_week_high: (amt, pct) => `本周支出${amt}，比上周高${pct}%`,
                 insight_cat_spike: (label, amt, times) => `${label}本周花了${amt}，是上周的${times}倍`,
-                insight_normal: '本周消费正常，没有异常波动 👍',
+                insight_normal: '本周消费正常，没有异常波动',
                 budget_set_ai: (label, amt) => `已设置${label}月预算 <span class="text-white font-num font-bold">${amt}</span>`,
                 budget_none: '还没设置预算。',
                 budget_status_title: '本月预算情况：'
@@ -3161,7 +3688,7 @@
                 ask_amount: (cat) => `Adding ${cat}, how much?`,
                 income_label: 'Income', expense_label: 'Expense',
                 deleted_single: (date, desc, amt) => `Deleted: ${date} "${desc}" ${amt}<br><span class="text-white/35 text-xs">Say "undo" to restore</span>`,
-                will_delete: (count, scope, total) => `About to delete <span class="text-xl font-bold font-num text-white">${count}</span> records (${scope}, total ${total})<br><span class="text-yellow-400 text-xs">Reply "confirm" to proceed or "cancel" to abort</span>`,
+                will_delete: (count, scope, total) => `About to delete <span class="text-xl font-bold font-num text-white">${count}</span> records (${scope}, total ${total})<br><span class="text-[#e84393] text-xs">Reply "confirm" to proceed or "cancel" to abort</span>`,
                 query_result: (timeStr, catStr, typeStr, total) => `${timeStr}${catStr} total ${typeStr}: <span class="text-xl font-bold font-num text-white">${total}</span>`,
                 query_no_data: (timeStr, catStr, typeStr) => `No ${typeStr} records found${catStr ? ' for '+catStr : ''}${timeStr ? ' in '+timeStr : ''}.`,
                 modified_last: (changes) => `Modified last entry: ${changes}`,
@@ -3171,16 +3698,16 @@
                 recurring_cancelled: (desc, amt) => `Cancelled auto-record: "${desc}" ${amt}`,
                 recurring_list_title: 'Current recurring rules:',
                 freq_monthly: 'Monthly', freq_weekly: 'Weekly', freq_daily: 'Daily',
-                shortcut_used: (desc, amt) => `⚡ Quick record: ${desc} <span class="text-teal-neon font-num">${amt}</span>`,
+                shortcut_used: (desc, amt) => `Quick record:${desc} <span class="text-teal-neon font-num">${amt}</span>`,
                 shortcut_set: (keyword, desc, amt) => `Shortcut set: say "${keyword}" to auto-record ${desc} ${amt}`,
                 shortcut_empty: 'No shortcuts set.',
                 shortcut_list_title: 'Shortcuts:',
                 last_record: (keyword, date, desc, amt) => `Last ${keyword}: ${date} "${desc}" <span class="text-white font-num font-bold">${amt}</span>`,
                 not_found_keyword: (keyword) => `No records found for "${keyword}".`,
-                insight_title: '📈 Spending Insight',
+                insight_title: 'Spending Insight',
                 insight_week_high: (amt, pct) => `This week: ${amt}, ${pct}% higher than last week`,
                 insight_cat_spike: (label, amt, times) => `${label} this week: ${amt}, ${times}x last week`,
-                insight_normal: 'Spending looks normal this week 👍',
+                insight_normal: 'Spending looks normal this week',
                 budget_set_ai: (label, amt) => `Set ${label} monthly budget: <span class="text-white font-num font-bold">${amt}</span>`,
                 budget_none: 'No budgets set yet.',
                 budget_status_title: 'Monthly budget status:'
@@ -3210,7 +3737,7 @@
                 ask_amount: (cat) => `${cat}を記録、金額は？`,
                 income_label: '収入', expense_label: '支出',
                 deleted_single: (date, desc, amt) => `削除：${date}「${desc}」${amt}<br><span class="text-white/35 text-xs">「戻す」で復元</span>`,
-                will_delete: (count, scope, total) => `<span class="text-xl font-bold font-num text-white">${count}</span>件を削除します（${scope}、合計${total}）<br><span class="text-yellow-400 text-xs">「確認」で実行、「キャンセル」で中止</span>`,
+                will_delete: (count, scope, total) => `<span class="text-xl font-bold font-num text-white">${count}</span>件を削除します（${scope}、合計${total}）<br><span class="text-[#e84393] text-xs">「確認」で実行、「キャンセル」で中止</span>`,
                 query_result: (timeStr, catStr, typeStr, total) => `${timeStr}${catStr}${typeStr}合計：<span class="text-xl font-bold font-num text-white">${total}</span>`,
                 query_no_data: (timeStr, catStr, typeStr) => `${timeStr}${catStr}の${typeStr}記録が見つかりません。`,
                 modified_last: (changes) => `前回を修正：${changes}`,
@@ -3220,16 +3747,16 @@
                 recurring_cancelled: (desc, amt) => `自動記帳を取消：「${desc}」${amt}`,
                 recurring_list_title: '現在の自動記帳ルール：',
                 freq_monthly: '毎月', freq_weekly: '毎週', freq_daily: '毎日',
-                shortcut_used: (desc, amt) => `⚡ クイック記録：${desc} <span class="text-teal-neon font-num">${amt}</span>`,
+                shortcut_used: (desc, amt) => `クイック記録：${desc} <span class="text-teal-neon font-num">${amt}</span>`,
                 shortcut_set: (keyword, desc, amt) => `ショートカット設定：「${keyword}」で ${desc} ${amt} を自動記録`,
                 shortcut_empty: 'ショートカットは未設定です。',
                 shortcut_list_title: 'ショートカット一覧：',
                 last_record: (keyword, date, desc, amt) => `前回の${keyword}：${date}「${desc}」<span class="text-white font-num font-bold">${amt}</span>`,
                 not_found_keyword: (keyword) => `「${keyword}」の記録が見つかりません。`,
-                insight_title: '📈 消費分析',
+                insight_title: '消費分析',
                 insight_week_high: (amt, pct) => `今週の支出${amt}、先週より${pct}%高い`,
                 insight_cat_spike: (label, amt, times) => `${label}今週${amt}、先週の${times}倍`,
-                insight_normal: '今週の消費は正常です 👍',
+                insight_normal: '今週の消費は正常です',
                 budget_set_ai: (label, amt) => `${label}月間予算を設定：<span class="text-white font-num font-bold">${amt}</span>`,
                 budget_none: '予算は未設定です。',
                 budget_status_title: '今月の予算状況：'
@@ -3259,7 +3786,7 @@
                 ask_amount: (cat) => `${cat} 기록, 금액은?`,
                 income_label: '수입', expense_label: '지출',
                 deleted_single: (date, desc, amt) => `삭제: ${date} "${desc}" ${amt}<br><span class="text-white/35 text-xs">"되돌리기"로 복원</span>`,
-                will_delete: (count, scope, total) => `<span class="text-xl font-bold font-num text-white">${count}</span>건 삭제 예정 (${scope}, 합계 ${total})<br><span class="text-yellow-400 text-xs">"확인"으로 진행, "취소"로 중단</span>`,
+                will_delete: (count, scope, total) => `<span class="text-xl font-bold font-num text-white">${count}</span>건 삭제 예정 (${scope}, 합계 ${total})<br><span class="text-[#e84393] text-xs">"확인"으로 진행, "취소"로 중단</span>`,
                 query_result: (timeStr, catStr, typeStr, total) => `${timeStr}${catStr} ${typeStr} 합계: <span class="text-xl font-bold font-num text-white">${total}</span>`,
                 query_no_data: (timeStr, catStr, typeStr) => `${timeStr}${catStr} ${typeStr} 기록이 없습니다.`,
                 modified_last: (changes) => `이전 항목 수정: ${changes}`,
@@ -3269,16 +3796,16 @@
                 recurring_cancelled: (desc, amt) => `자동 기록 취소: "${desc}" ${amt}`,
                 recurring_list_title: '현재 자동 기록 규칙:',
                 freq_monthly: '매월', freq_weekly: '매주', freq_daily: '매일',
-                shortcut_used: (desc, amt) => `⚡ 바로가기: ${desc} <span class="text-teal-neon font-num">${amt}</span>`,
+                shortcut_used: (desc, amt) => `바로가기:${desc} <span class="text-teal-neon font-num">${amt}</span>`,
                 shortcut_set: (keyword, desc, amt) => `바로가기 설정: "${keyword}"로 ${desc} ${amt} 자동 기록`,
                 shortcut_empty: '바로가기가 없습니다.',
                 shortcut_list_title: '바로가기 목록:',
                 last_record: (keyword, date, desc, amt) => `최근 ${keyword}: ${date} "${desc}" <span class="text-white font-num font-bold">${amt}</span>`,
                 not_found_keyword: (keyword) => `"${keyword}" 관련 기록이 없습니다.`,
-                insight_title: '📈 소비 분석',
+                insight_title: '소비 분석',
                 insight_week_high: (amt, pct) => `이번주 지출 ${amt}, 지난주보다 ${pct}% 높음`,
                 insight_cat_spike: (label, amt, times) => `${label} 이번주 ${amt}, 지난주의 ${times}배`,
-                insight_normal: '이번주 소비가 정상입니다 👍',
+                insight_normal: '이번주 소비가 정상입니다',
                 budget_set_ai: (label, amt) => `${label} 월 예산 설정: <span class="text-white font-num font-bold">${amt}</span>`,
                 budget_none: '예산이 설정되지 않았습니다.',
                 budget_status_title: '이번달 예산 현황:'
@@ -3314,50 +3841,90 @@
             }
 
             // === Context-aware follow-up corrections ===
-            if (lastAiTxId && !text.match(/\d/)) {
+            if (lastAiTxId) {
                 const lastTx = txs.find(tx => tx.id === lastAiTxId);
                 if (lastTx) {
-                    // Date correction: "不对是前天的" / "应该是昨天" / "改成今天"
-                    const dateCorr = text.match(/(不对|错了|应该|改成|改为|其实是?).*(今天|昨天|大前天|前天)/);
-                    if (dateCorr) {
+                    // Date correction: supports 今天/昨天/前天/大前天/本周一~日/上周X/周X/X号/X月X号/上个月/去年
+                    const dateCorrMatch = text.match(/(不对|错了|应该|改成|改为|其实)?是?\s*(今天|昨天|大前天|前天|(本周|这周|上周|周)[一二三四五六日天]|(\d{1,2})月(\d{1,2})[号日]|(\d{1,2})[号日]|上个月|上月|这个月|本月|去年)/);
+                    if (dateCorrMatch && !text.match(/(花了|花|买|吃|喝|打车|记|收入|饭|餐|菜|咖啡|奶茶|超市|外卖|水果|零食|早|午|晚|夜宵|[一二三四五六七八九十百千万]+[块元]?$|\d)/) ) {
                         const now = new Date();
-                        let offset = 0;
-                        if (dateCorr[2] === '昨天') offset = -1;
-                        else if (dateCorr[2] === '前天') offset = -2;
-                        else if (dateCorr[2] === '大前天') offset = -3;
-                        const nd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset, 12, 0, 0);
-                        pushUndo('modify', {...lastTx});
-                        lastTx.date = nd.toISOString();
-                        renderAll();
-                        return `✅ 已改为${dateCorr[2]}`;
+                        let nd;
+                        const dateWord = dateCorrMatch[2];
+                        if (dateWord === '今天') nd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+                        else if (dateWord === '昨天') nd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 12, 0, 0);
+                        else if (dateWord === '前天') nd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2, 12, 0, 0);
+                        else if (dateWord === '大前天') nd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 3, 12, 0, 0);
+                        else if (dateCorrMatch[3]) {
+                            const wm = dateWord.match(/(本周|这周|上周|周)([一二三四五六日天])/);
+                            if (wm) {
+                                const dayMap = {'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'日':0,'天':0};
+                                const targetDay = dayMap[wm[2]];
+                                let base = wm[1] === '上周' ? new Date(now.getTime() - 7*86400000) : now;
+                                const monday = getMonday(base);
+                                const off = targetDay === 0 ? 6 : targetDay - 1;
+                                nd = new Date(monday.getTime() + off * 86400000);
+                                nd.setHours(12, 0, 0, 0);
+                            }
+                        }
+                        else if (dateCorrMatch[4] && dateCorrMatch[5]) {
+                            const m = parseInt(dateCorrMatch[4]) - 1;
+                            const d = parseInt(dateCorrMatch[5]);
+                            nd = new Date(now.getFullYear(), m, d, 12, 0, 0);
+                        }
+                        else if (dateCorrMatch[6]) {
+                            const d = parseInt(dateCorrMatch[6]);
+                            nd = new Date(now.getFullYear(), now.getMonth(), d, 12, 0, 0);
+                        }
+                        else if (dateWord === '上个月' || dateWord === '上月') {
+                            const oldD = new Date(lastTx.date);
+                            nd = new Date(now.getFullYear(), now.getMonth() - 1, oldD.getDate(), 12, 0, 0);
+                        }
+                        else if (dateWord === '这个月' || dateWord === '本月') {
+                            const oldD = new Date(lastTx.date);
+                            nd = new Date(now.getFullYear(), now.getMonth(), oldD.getDate(), 12, 0, 0);
+                        }
+                        else if (dateWord === '去年') {
+                            const oldD = new Date(lastTx.date);
+                            nd = new Date(now.getFullYear() - 1, oldD.getMonth(), oldD.getDate(), 12, 0, 0);
+                        }
+                        if (nd) {
+                            pushUndo('modify', {...lastTx});
+                            lastTx.date = nd.toISOString();
+                            renderAll();
+                            return `<i data-lucide="check" class="w-4 h-4 inline-block text-teal-neon"></i> 已改为${dateWord}`;
+                        }
                     }
-                    // Category correction: "是餐饮" / "分类改成交通" / "归到购物"
-                    const catCorr = text.match(/(是|分类|类型|归到|改成|改为|算)\s*(餐饮|交通|购物|数码|生活|娱乐|其他|工资|奖金|理财)/);
-                    if (catCorr) {
-                        const catLabel = catCorr[2];
-                        const allCats = {...EXPENSE_CATS, ...INCOME_CATS};
-                        for (let key in allCats) {
-                            if (allCats[key].label === catLabel) {
-                                pushUndo('modify', {...lastTx});
-                                lastTx.cat = key;
-                                if (lastTx.desc && lastTx.desc !== catLabel) learnCategory(lastTx.desc, key);
-                                renderAll();
-                                return `✅ 分类已改为${catLabel}`;
+                    // Category correction: "是餐饮" / "这是宠物" / "宠物" (bare name only)
+                    const hasCnNum = /[百千万亿十]/.test(text) || parseCnNumber(text) > 0;
+                    const hasAction = /\d|删除|删|查|花了|花|买|吃|喝|打车|记|赚|收入|多少|所有|全部|本月|本周|上月/.test(text);
+                    if (!hasCnNum && !hasAction) {
+                        const catCorrPrefix = text.match(/^(这?是|分类|类型|归到|改成|改为|算)\s*(.+)/);
+                        const catCorrInput = catCorrPrefix ? catCorrPrefix[2].replace(/[的类]$/, '').trim() : text.trim();
+                        if (catCorrInput.length <= 6) {
+                            const allCatsCorr = {...EXPENSE_CATS, ...INCOME_CATS};
+                            for (let key in allCatsCorr) {
+                                if (allCatsCorr[key].label === catCorrInput) {
+                                    pushUndo('modify', {...lastTx});
+                                    lastTx.cat = key;
+                                    if (lastTx.desc && lastTx.desc !== allCatsCorr[key].label) learnCategory(lastTx.desc, key);
+                                    renderAll();
+                                    return `<i data-lucide="check" class="w-4 h-4 inline-block text-teal-neon"></i> 分类已改为${allCatsCorr[key].label}`;
+                                }
                             }
                         }
                     }
                 }
             }
-            // Amount/desc correction: "改成30" / "金额改成50" / "备注改成XX"
+            // Amount/desc correction: "改成30" / "金额改成50" / "是150" / "不对是200"
             if (lastAiTxId) {
                 const lastTx = txs.find(tx => tx.id === lastAiTxId);
                 if (lastTx) {
-                    const amtCorr = text.match(/(?:金额|价格)?(?:改成|改为)\s*(\d+(\.\d+)?)/);
-                    if (amtCorr && !text.match(/(花|记|打车|吃|喝)/)) {
+                    const amtCorr = text.match(/(?:金额|价格)?(?:改成|改为|是)\s*(\d+(\.\d+)?)\s*[元块]?$/);
+                    if (amtCorr && !text.match(/(花|记|打车|吃|喝|买|赚|收入|工资)/)) {
                         pushUndo('modify', {...lastTx});
                         lastTx.amount = parseFloat(amtCorr[1]);
                         renderAll();
-                        return `✅ 金额已改为${amtCorr[1]}`;
+                        return `<i data-lucide="check" class="w-4 h-4 inline-block text-teal-neon"></i> 金额已改为${amtCorr[1]}`;
                     }
                     const descCorr = text.match(/(?:备注|描述|名字)(?:改成|改为)\s*(.+)/);
                     if (descCorr) {
@@ -3366,7 +3933,7 @@
                         lastTx.desc = newDesc;
                         learnCategory(newDesc, lastTx.cat);
                         renderAll();
-                        return `✅ 备注已改为"${newDesc}"`;
+                        return `<i data-lucide="check" class="w-4 h-4 inline-block text-teal-neon"></i> 备注已改为"${newDesc}"`;
                     }
                 }
             }
@@ -3376,8 +3943,13 @@
                 const state = multiTurnState;
                 if (state.step === 'need_amount') {
                     const numM = text.match(/(\d+(\.\d+)?)/);
+                    const cnAmt = parseCnNumber(text);
                     if (numM) {
                         state.partial.amount = parseFloat(numM[0]);
+                        multiTurnState = null;
+                        return finishRecord(state.partial);
+                    } else if (cnAmt > 0) {
+                        state.partial.amount = cnAmt;
                         multiTurnState = null;
                         return finishRecord(state.partial);
                     } else {
@@ -3403,11 +3975,43 @@
 
             const timeInfo = parseTime(text);
             const cleanText = timeInfo ? text.replace(timeInfo.match, "").trim() : text;
-            const catInfo = parseCategoryForAI(text);
+            // Force-match custom category: try all categories including custom ones
+            let catInfo = null;
+            const _stripped = text.replace(/[\d\s.]+/g, '').replace(/(花了|买了|块钱|块|元)/g, '').trim();
+            const _stripEmoji = s => s.replace(/[\u{1F300}-\u{1FAD6}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, '').trim();
+            const _expKeys = Object.keys(EXPENSE_CATS);
+            for (let i = 0; i < _expKeys.length; i++) {
+                const _c = EXPENSE_CATS[_expKeys[i]];
+                const _lbl = _stripEmoji(_c.label);
+                if (_lbl === _stripped || _stripped === _c.label || text.includes(_lbl) || text.includes(_c.label)) {
+                    catInfo = { key: _expKeys[i], ..._c };
+                    break;
+                }
+            }
+            if (!catInfo) {
+                const _incKeys = Object.keys(INCOME_CATS);
+                for (let i = 0; i < _incKeys.length; i++) {
+                    const _c = INCOME_CATS[_incKeys[i]];
+                    const _lbl = _stripEmoji(_c.label);
+                    if (_lbl === _stripped || _stripped === _c.label || text.includes(_lbl) || text.includes(_c.label)) {
+                        catInfo = { key: _incKeys[i], ..._c };
+                        break;
+                    }
+                }
+            }
+            if (!catInfo) catInfo = parseCategoryForAI(text);
 
             let amountText = cleanText;
-            const numMatch = amountText.match(/(\d+(\.\d+)?)/);
-            let amount = numMatch ? parseFloat(numMatch[0]) : 0;
+            const mixedMatch = amountText.match(/(\d+(\.\d+)?)\s*([万千百亿])/);
+            let numMatch = amountText.match(/(\d+(\.\d+)?)/);
+            let amount = 0;
+            if (mixedMatch) {
+                const unitMap = {'百':100,'千':1000,'万':10000,'亿':100000000};
+                amount = parseFloat(mixedMatch[1]) * unitMap[mixedMatch[3]];
+                numMatch = [mixedMatch[0]];
+            } else if (numMatch) {
+                amount = parseFloat(numMatch[0]);
+            }
             if (!amount) {
                 const cnAmt = parseCnNumber(amountText);
                 if (cnAmt > 0) amount = cnAmt;
@@ -3476,29 +4080,35 @@
             if (text.match(/(设置预算|设定预算|预算设为|预算设置)/)) {
                 const budgetAmt = text.match(/(\d+(\.\d+)?)/);
                 if (!budgetAmt) return ai('specify_budget');
-                const bCat = catInfo ? catInfo.key : 'total';
-                const bLabel = catInfo ? catInfo.label : '总';
-                budgets[bCat] = parseFloat(budgetAmt[0]);
-                saveBudgets();
-                return ai('budget_set_ai', bLabel, budgets[bCat].toLocaleString());
+                const amt = parseFloat(budgetAmt[0]);
+                if (catInfo) {
+                    budgets[catInfo.key] = amt;
+                    saveBudgets();
+                    return ai('budget_set_ai', catInfo.label, amt.toLocaleString());
+                } else {
+                    totalBudget = amt;
+                    localStorage.setItem(getTotalBudgetKey(), totalBudget);
+                    return ai('budget_set_ai', '总', amt.toLocaleString());
+                }
             }
             if (text.match(/(查看预算|预算情况|预算还剩|预算多少)/)) {
                 const bKeys = Object.keys(budgets);
-                if (bKeys.length === 0) return ai('budget_none');
+                if (bKeys.length === 0 && totalBudget <= 0) return ai('budget_none');
                 const now2 = new Date();
                 const monthStart = new Date(now2.getFullYear(), now2.getMonth(), 1);
                 let result = `${ai('budget_status_title')}<br>`;
+                if (totalBudget > 0) {
+                    const spent = txs.filter(t => t.type==='expense' && new Date(t.date)>=monthStart).reduce((s,t)=>s+t.amount,0);
+                    const pct = Math.round(spent/totalBudget*100);
+                    const color = pct > 100 ? 'text-finance-rise' : (pct > 80 ? 'text-[#e84393]' : 'text-teal-neon');
+                    result += `• ${t('total_budget')}: ${spent.toLocaleString()} / ${totalBudget.toLocaleString()} <span class="${color} font-num">${pct}%</span><br>`;
+                }
                 bKeys.forEach(k => {
                     const bAmt = budgets[k];
-                    let spent = 0;
-                    if (k === 'total') {
-                        spent = txs.filter(t => t.type==='expense' && new Date(t.date)>=monthStart).reduce((s,t)=>s+t.amount,0);
-                    } else {
-                        spent = txs.filter(t => t.type==='expense' && t.cat===k && new Date(t.date)>=monthStart).reduce((s,t)=>s+t.amount,0);
-                    }
+                    let spent = txs.filter(t => t.type==='expense' && t.cat===k && new Date(t.date)>=monthStart).reduce((s,t)=>s+t.amount,0);
                     const pct = Math.round(spent/bAmt*100);
-                    const label = k==='total' ? t('total_budget') : (EXPENSE_CATS[k]||{label:k}).label;
-                    const color = pct > 100 ? 'text-finance-rise' : (pct > 80 ? 'text-yellow-400' : 'text-teal-neon');
+                    const label = (EXPENSE_CATS[k]||{label:k}).label;
+                    const color = pct > 100 ? 'text-finance-rise' : (pct > 80 ? 'text-[#e84393]' : 'text-teal-neon');
                     result += `• ${label}: ${spent.toLocaleString()} / ${bAmt.toLocaleString()} <span class="${color} font-num">${pct}%</span><br>`;
                 });
                 return result;
@@ -3551,7 +4161,7 @@
                 const _top3 = currentLang==='zh'?'支出Top3':currentLang==='en'?'Top 3':currentLang==='ja'?'支出Top3':'지출 Top3';
                 const _none = currentLang==='zh'?'暂无':currentLang==='en'?'None':currentLang==='ja'?'なし':'없음';
 
-                return `<span class="text-white font-bold">📊 ${_title}</span><br><br>` +
+                return `<span class="text-white font-bold"><i data-lucide="bar-chart-3" class="w-4 h-4 inline-block"></i> ${_title}</span><br><br>` +
                     `${_income}：<span class="text-teal-neon font-num">${thisIncome.toLocaleString()}</span><br>` +
                     `${_expense}：<span class="text-white font-num font-bold">${thisExpense.toLocaleString()}</span> ${compareStr}<br>` +
                     `${_balance}：<span class="text-cyber-blue font-num">${(thisIncome-thisExpense).toLocaleString()}</span><br><br>` +
@@ -3587,10 +4197,11 @@
             const recurMatch = text.match(/(每个月|每月|每周|每天|每日)/);
             const isRecurring = recurMatch && text.match(/(自动|定期|固定|重复)/);
 
-            // Detect fuzzy category reply: user answers "是吃的" / "餐饮" / "交通" etc. after an "other" record
-            if (lastAiTxId && !numMatch) {
+            // Detect fuzzy category reply: user answers "是吃的" / "餐饮" / "宠物" etc. after an "other" record
+            if (lastAiTxId && !numMatch && !amount) {
                 const lastTx = txs.find(tx => tx.id === lastAiTxId);
                 if (lastTx && lastTx.cat === 'other') {
+                    // First try parseCategoryForAI
                     const fuzzyCat = parseCategoryForAI(text);
                     if (fuzzyCat) {
                         pushUndo('modify', {...lastTx});
@@ -3598,6 +4209,31 @@
                         learnCategory(lastTx.desc, fuzzyCat.key);
                         renderAll();
                         return ai('modified_target', lastTx.desc, ai('cat_to', fuzzyCat.label));
+                    }
+                    // Direct scan: strip prefixes and match against all category labels
+                    const bareInput = text.replace(/^(这?是|分类|类型|归到|算)\s*/, '').replace(/[的类]$/, '').trim();
+                    const _seD = s => s.replace(/[\u{1F300}-\u{1FAD6}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, '').trim();
+                    if (bareInput.length >= 1 && bareInput.length <= 8) {
+                        const _eKeys = Object.keys(EXPENSE_CATS);
+                        for (let i = 0; i < _eKeys.length; i++) {
+                            if (EXPENSE_CATS[_eKeys[i]].label === bareInput || _seD(EXPENSE_CATS[_eKeys[i]].label) === bareInput) {
+                                pushUndo('modify', {...lastTx});
+                                lastTx.cat = _eKeys[i];
+                                learnCategory(lastTx.desc, _eKeys[i]);
+                                renderAll();
+                                return `<i data-lucide="check" class="w-4 h-4 inline-block text-teal-neon"></i> 分类已改为${EXPENSE_CATS[_eKeys[i]].label}`;
+                            }
+                        }
+                        const _iKeys = Object.keys(INCOME_CATS);
+                        for (let i = 0; i < _iKeys.length; i++) {
+                            if (INCOME_CATS[_iKeys[i]].label === bareInput || _seD(INCOME_CATS[_iKeys[i]].label) === bareInput) {
+                                pushUndo('modify', {...lastTx});
+                                lastTx.cat = _iKeys[i];
+                                learnCategory(lastTx.desc, _iKeys[i]);
+                                renderAll();
+                                return `<i data-lucide="check" class="w-4 h-4 inline-block text-teal-neon"></i> 分类已改为${INCOME_CATS[_iKeys[i]].label}`;
+                            }
+                        }
                     }
                 }
             }
@@ -3651,7 +4287,7 @@
 
             if (isDelete) {
                  const isBatch = text.match(/(所有|全部|所有的|全部的|都|清空|清除)/);
-                 const keyWord = cleanText.replace(/(删除|移除|撤销|去掉|清空|清除|所有|全部|的|记录|消费|账|记账|账单|那笔|那个|都)/g, "").replace(/\d+(\.\d+)?/g, '').trim();
+                 const keyWord = cleanText.replace(/(删除|移除|撤销|去掉|清空|清除|所有|全部|其他|的|记录|消费|数据|账|记账|账单|那笔|那个|都)/g, "").replace(/\d+(\.\d+)?/g, '').trim();
 
                  // Filter targets by date, type, category, keyword
                  let targets = txs.filter(t => {
@@ -3840,7 +4476,7 @@
 
             if (amount > 0) {
                 // Smart confirmation for large amounts with uncertain category
-                if (amount >= 500 && !catInfo) {
+                if (amount >= 5000 && !catInfo) {
                     pendingAction = { type: 'confirm-record', payload: { timeInfo, text, cleanText, amountText, numMatch, amount, catInfo } };
                     const confirmMsg = currentLang === 'zh' ? `确认记录 <span class="text-teal-neon font-num font-bold">${amount}</span> 元吗？（说"确认"继续，"取消"放弃）` : `Confirm recording <span class="text-teal-neon font-num font-bold">${amount}</span>? (say "yes" or "no")`;
                     return confirmMsg;
@@ -3949,7 +4585,7 @@
                 .replace(/(买了?|充了?|付了?|转了?|发了?)/g, '')
                 .replace(/(花了?|用了?|付了?|共|一共|总共|人均)\s*$/, '')
                 .trim();
-            if (!numMatch) desc = desc.replace(/[零一二两三四五六七八九十百千万]+[块元]?/, '');
+            desc = desc.replace(/[零一二两三四五六七八九十百千万亿半]+[块元]?/g, '').trim();
             // "在星巴克花了45" → extract location as desc
             if (!desc && amountText) {
                 const locMatch = amountText.match(/在(.+?)(?:花|消费|用|付|吃|喝)/);
@@ -3968,8 +4604,15 @@
                 const reCat = parseCategoryForAI(text);
                 if (reCat) { cat = reCat.key; if(!desc) desc = reCat.label; }
             }
+            // Fallback: if still "other", check if desc exactly matches a category label
+            if (cat === 'other' && desc) {
+                const allC = {...EXPENSE_CATS, ...INCOME_CATS};
+                for (let k in allC) {
+                    if (allC[k].label.trim() === desc.trim()) { cat = k; break; }
+                }
+            }
 
-            if (text.match(/(收入|赚了|入账|工资|奖金|理财)/)) {
+            if (text.match(/(收入|赚了|赚|入账|工资|奖金|理财|捡了|中了|中奖|彩票|红包|退款|报销)/)) {
                 type = 'income';
                 if (cat === 'other') {
                     if(text.match(/工资/)) { cat = 'salary'; if(!desc) desc = '工资'; }
@@ -4002,27 +4645,29 @@
             renderAll();
 
             const catLabel = t('cat_' + cat) || (type === 'income' ? INCOME_CATS : EXPENSE_CATS)[cat]?.label || '';
-            const typeIcon = type === 'income' ? '📥' : '📤';
             const descDisplay = desc === catLabel ? desc : `${desc} · ${catLabel}`;
             const recordedLabel = currentLang === 'zh' ? '已记：' : currentLang === 'ja' ? '記録：' : currentLang === 'ko' ? '기록:' : 'Recorded: ';
             const timeLabel = timeInfo ? (timeInfo.label === '昨天' ? t('yesterday') : timeInfo.label === '今天' ? t('today') : timeInfo.label) + ' ' : '';
-            let response = `${typeIcon} ${recordedLabel}${timeLabel}${descDisplay} <span class="text-teal-neon font-num">${amount.toLocaleString()}</span>`;
+            let response = `${recordedLabel}${timeLabel}${descDisplay} · <span class="text-teal-neon font-num">${amount.toLocaleString()}</span>`;
 
             const genericDescs = ['收入', '支出', '消费', '其他', 'income', 'expense', 'other'];
             if (genericDescs.includes(desc)) {
                 const tipMsg = currentLang === 'zh' ? '说"改成XX"可修改备注' : currentLang === 'en' ? 'Say "change to XX" to edit note' : currentLang === 'ja' ? '「XX に変更」でメモ修正' : '"XX로 변경"으로 메모 수정';
-                response += `<br><span class="text-white/35 text-xs">💡 ${tipMsg}</span>`;
+                response += `<br><span class="text-white/35 text-xs"><i data-lucide="info" class="w-3 h-3 inline-block"></i> ${tipMsg}</span>`;
             }
 
             if (cat === 'other') {
+                const customKeys = Object.keys(EXPENSE_CATS).filter(k => k.startsWith('custom_'));
+                const customLabels = customKeys.map(k => EXPENSE_CATS[k].label).join('、') || '(无)';
                 const askMsg = currentLang === 'zh' ? `这笔是什么类型的？（如：餐饮、交通、购物...）` : currentLang === 'en' ? `What category is this? (e.g. food, transport, shopping...)` : currentLang === 'ja' ? `カテゴリは？（食費、交通、買い物...）` : `어떤 카테고리인가요? (식비, 교통, 쇼핑...)`;
-                response += `<br><span class="text-white/50 text-xs">🏷️ ${askMsg}</span>`;
+                response += `<br><span class="text-white/50 text-xs"><i data-lucide="tag" class="w-3 h-3 inline-block"></i> ${askMsg}</span>`;
+                response += `<br><span class="text-white/25 text-[10px]">[debug] 自定义分类: ${customLabels} | input="${text}" stripped="${text.replace(/[\\d\\s.]+/g,'').trim()}"</span>`;
             }
 
             // Feature 4: Budget warning
             response += checkBudgetAfterRecord(cat, type);
-            // Feature 8: Anomaly detection
-            response += checkAnomaly(amount, cat);
+            // Feature 8: Anomaly detection (expenses only)
+            if (type === 'expense') response += checkAnomaly(amount, cat);
             // Feature 9: Shortcut suggestion
             response += checkShortcutSuggestion(desc, amount, cat);
 
@@ -4033,14 +4678,15 @@
         function sendQuickChat(text) {
             const box = document.getElementById('chat-box');
             const displayText = QUICK_DISPLAY[text] ? (QUICK_DISPLAY[text][currentLang] || text) : text;
-            box.innerHTML += `<div class="flex justify-end mb-4"><div class="bg-cyber-purple text-white px-4 py-3 rounded-[24px] rounded-tr-sm text-sm font-medium shadow-[0_0_15px_rgba(124,58,237,0.3)]">${displayText}<div class="text-[9px] text-white/50 mt-1 text-right">${chatTime()}</div></div></div>`;
+            box.innerHTML += `<div class="flex justify-end mb-4"><div class="bg-cyber-purple text-white px-4 py-3 rounded-[24px] rounded-tr-sm text-[16px] font-medium shadow-[0_0_15px_rgba(124,58,237,0.3)]">${displayText}</div></div>`;
             // Hide chips after first use
             const chips = document.getElementById('chat-quick-chips');
             if (chips) chips.style.display = 'none';
             setTimeout(() => {
                 const aiRes = processAI(text);
-                box.innerHTML += `<div class="flex justify-start mb-4"><div class="glass-card text-white/90 px-4 py-3 rounded-[24px] rounded-tl-sm text-sm border border-white/10 shadow-lg ">${aiRes}<div class="text-[9px] text-white/25 mt-1">${chatTime()}</div></div></div>`;
+                box.innerHTML += `<div class="flex justify-start mb-4"><div class="glass-card text-white/90 px-4 py-3 rounded-[24px] rounded-tl-sm text-[16px] border border-white/10 shadow-lg ">${aiRes}</div></div>`;
                 box.scrollTop = box.scrollHeight;
+                lucide.createIcons();
             }, 600);
         }
 
@@ -4050,17 +4696,19 @@
             const txt = input.value.trim();
             if(!txt) return;
             const box = document.getElementById('chat-box');
-            box.innerHTML += `<div class="flex justify-end mb-4"><div class="bg-cyber-purple text-white px-4 py-3 rounded-[24px] rounded-tr-sm text-sm font-medium shadow-[0_0_15px_rgba(124,58,237,0.3)]">${escHtml(txt)}<div class="text-[9px] text-white/50 mt-1 text-right">${chatTime()}</div></div></div>`;
+            box.innerHTML += `<div class="flex justify-end mb-4"><div class="bg-cyber-purple text-white px-4 py-3 rounded-[24px] rounded-tr-sm text-[16px] font-medium shadow-[0_0_15px_rgba(124,58,237,0.3)]">${escHtml(txt)}</div></div>`;
             input.value = '';
             // Hide chips after first message
             const chips = document.getElementById('chat-quick-chips');
             if (chips) chips.style.display = 'none';
             setTimeout(() => {
                 const aiRes = processAI(txt);
-                box.innerHTML += `<div class="flex justify-start mb-4"><div class="glass-card text-white/90 px-4 py-3 rounded-[24px] rounded-tl-sm text-sm border border-white/10 shadow-lg ">${aiRes}<div class="text-[9px] text-white/25 mt-1">${chatTime()}</div></div></div>`;
+                box.innerHTML += `<div class="flex justify-start mb-4"><div class="glass-card text-white/90 px-4 py-3 rounded-[24px] rounded-tl-sm text-[16px] border border-white/10 shadow-lg ">${aiRes}</div></div>`;
                 box.scrollTop = box.scrollHeight;
+                lucide.createIcons();
             }, 600);
         }
+
 
         // --- Core UI & Logic ---
         function renderAll() {
@@ -4134,7 +4782,8 @@
             const elPeriodLabel = document.getElementById('card-period-label');
             const elIncomeLabel = document.getElementById('card-income-label');
 
-            if (elPeriodLabel) { elPeriodLabel.innerText = periodLabel; elPeriodLabel.removeAttribute('data-i18n'); }
+            const bookName = (books.find(b => b.id === currentBook) || {}).name || '';
+            if (elPeriodLabel) { elPeriodLabel.innerText = periodLabel + (bookName ? ' · ' + bookName : ''); elPeriodLabel.removeAttribute('data-i18n'); }
             if (elIncomeLabel) { elIncomeLabel.innerText = incomeLabel; elIncomeLabel.removeAttribute('data-i18n'); }
 
             if (amountHidden) {
@@ -4339,6 +4988,24 @@
             renderCharts();
         }
 
+        function setPieType(type) {
+            currentPieType = type;
+            const expTab = document.getElementById('pie-tab-expense');
+            const incTab = document.getElementById('pie-tab-income');
+            if (type === 'expense') {
+                expTab.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyber-purple/20 transition-all';
+                expTab.querySelector('span:last-child').className = 'text-[10px] text-white font-medium';
+                incTab.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all';
+                incTab.querySelector('span:last-child').className = 'text-[10px] text-white/35 font-medium';
+            } else {
+                incTab.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 transition-all';
+                incTab.querySelector('span:last-child').className = 'text-[10px] text-white font-medium';
+                expTab.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all';
+                expTab.querySelector('span:last-child').className = 'text-[10px] text-white/35 font-medium';
+            }
+            renderCharts();
+        }
+
         function setStatsFilter(f) {
             if (f === 'custom') {
                 openStatsDatePicker();
@@ -4387,6 +5054,10 @@
                 btnInc.className = 'flex-1 relative z-10 text-[14px] font-normal text-white transition-colors';
             }
             renderCategoryList();
+            selectedCatIcon = 'tag';
+            closeCatIconPicker();
+            const preview = document.getElementById('cat-icon-preview');
+            if (preview) { preview.setAttribute('data-lucide', 'tag'); lucide.createIcons(); }
         }
 
         function renderCategoryList() {
@@ -4421,6 +5092,39 @@
             localStorage.setItem('custom_income_cats', JSON.stringify(customInc));
         }
 
+                const CAT_ICONS = ['tag','coffee','car','shopping-bag','cpu','home','gamepad-2','package','heart','dog','cat','baby','shirt','scissors','book','music','film','camera','pen-tool','palette','dumbbell','bike','plane','train','bus','fuel','pill','stethoscope','graduation-cap','briefcase','building','store','gift','banknote','wallet','trending-up','sparkles','leaf','flower-2','paw-print','bone','fish','egg','apple','pizza','beer','wine','cigarette','umbrella','glasses','watch','gem','crown','star','moon','sun','cloud','zap'];
+        let selectedCatIcon = 'tag';
+
+        function toggleCatIconPicker() {
+            const panel = document.getElementById('icon-picker-panel');
+            if (!panel) return;
+            panel.classList.remove('hidden');
+            renderIconPicker();
+        }
+
+        function closeCatIconPicker() {
+            const panel = document.getElementById('icon-picker-panel');
+            if (panel) panel.classList.add('hidden');
+        }
+
+        function renderIconPicker() {
+            const grid = document.getElementById('icon-picker');
+            if (!grid) return;
+            grid.innerHTML = CAT_ICONS.map(icon => `
+                <div onclick="selectCatIcon('${icon}')" class="flex items-center justify-center w-12 h-12 rounded-2xl cursor-pointer transition-colors ${icon === selectedCatIcon ? 'bg-[#7c3aed]' : 'bg-white/5'}" data-icon-key="${icon}">
+                    <i data-lucide="${icon}" class="w-6 h-6 ${icon === selectedCatIcon ? 'text-white' : 'text-white/50'}"></i>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function selectCatIcon(icon) {
+            selectedCatIcon = icon;
+            const preview = document.getElementById('cat-icon-preview');
+            if (preview) { preview.setAttribute('data-lucide', icon); lucide.createIcons(); }
+            closeCatIconPicker();
+        }
+
         function addNewCategory() {
             const name = document.getElementById('new-cat-name').value.trim();
             if(!name) { showToast(t('enter_cat_name'), 'error'); return; }
@@ -4428,9 +5132,13 @@
             if(Object.keys(cats).length >= 15) { showToast(t('max_cats'), 'error'); return; }
             const id = 'custom_' + Date.now();
             const randomColor = PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)];
-            cats[id] = { label: name, color: randomColor, icon: 'tag' };
+            cats[id] = { label: name, color: randomColor, icon: selectedCatIcon };
             saveCustomCats();
             document.getElementById('new-cat-name').value = '';
+            selectedCatIcon = 'tag';
+            closeCatIconPicker();
+            const catPreview = document.getElementById('cat-icon-preview');
+            if (catPreview) { catPreview.setAttribute('data-lucide', 'tag'); lucide.createIcons(); }
             renderCategoryList();
             showToast(`${t('added_cat')}「${name}」`);
         }
