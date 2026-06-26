@@ -553,8 +553,9 @@
         </section>
 
         <!-- === 页面 3: AI 对话 === -->
-        <section id="page-chat" class="hidden flex flex-col h-[calc(100dvh-4rem)]">
+        <section id="page-chat" class="hidden flex flex-col h-[calc(100dvh-4rem)] relative">
                         <div id="chat-box" class="flex-1 overflow-y-auto space-y-4 pb-56 no-scrollbar px-1 overscroll-contain"></div>
+                        <div class="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-10" style="background:linear-gradient(to bottom, transparent, #000 80%)"></div>
         </section>
 
         <!-- === 页面 4: 个人中心 === -->
@@ -637,19 +638,6 @@
                     </div>
                 </div>
 
-                <div class="h-px bg-white/5 ml-12"></div>
-
-                <!-- 语音API Key -->
-                <div onclick="openApiKeyPanel()" class="flex items-center justify-between px-5 py-5 active:bg-white/5 transition-colors">
-                    <div class="flex items-center gap-3">
-                        <i data-lucide="mic" class="w-[18px] h-[18px] text-white"></i>
-                        <span class="text-[16px] font-normal text-white/90" data-i18n="speech_api_label">语音识别</span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                        <span id="api-key-status" class="text-[16px] font-normal text-white/35" data-i18n="api_not_set">未设置</span>
-                        <i data-lucide="chevron-right" class="w-4 h-4 text-white/25"></i>
-                    </div>
-                </div>
 
             </div>
 
@@ -811,7 +799,7 @@
                         <button type="button" onclick="setType('income')" class="flex-1 relative z-10 text-[14px] font-normal text-white/35 transition-colors" id="btn-income">收入</button>
                     </div>
                     <div class="py-5 relative">
-                        <input type="text" inputmode="decimal" id="e-amount" oninput="previewCalc()" class="w-full bg-transparent text-4xl font-light text-white placeholder:text-white/25 focus:outline-none font-num tracking-tighter" placeholder="0.00" autocomplete="off" required>
+                        <input type="text" inputmode="text" id="e-amount" oninput="previewCalc()" class="w-full bg-transparent text-4xl font-light text-white placeholder:text-white/25 focus:outline-none font-num tracking-tighter" placeholder="0.00" autocomplete="off" required>
                         <div id="calc-preview" class="absolute right-0 top-1/2 -translate-y-1/2 text-sm font-num text-teal-neon opacity-0 transition-opacity"></div>
                     </div>
                     <div id="cat-grid" class="grid grid-cols-4 gap-x-2 gap-y-3 max-h-[200px] overflow-y-auto no-scrollbar"></div>
@@ -927,28 +915,6 @@
         </div>
     </div>
 
-    <div id="apikey-modal" class="fixed inset-0 z-[73] hidden">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeApiKeyPanel()"></div>
-        <div class="absolute bottom-0 w-full bg-[#0a0a0c] rounded-t-[32px] border-t border-white/10 animate-slide-up shadow-2xl pb-safe">
-            <div class="w-full max-w-lg mx-auto">
-                <div class="p-6 pb-3">
-                    <div class="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5"></div>
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-white tracking-tight" data-i18n="api_key_title">语音识别设置</h3>
-                        <button onclick="closeApiKeyPanel()" class="flex items-center justify-center"><i data-lucide="x" class="w-5 h-5 text-gray-600"></i></button>
-                    </div>
-                    <p class="text-[12px] text-white/40 mt-2" data-i18n="api_key_desc">输入 Gemini API Key 以在主屏幕模式下使用语音功能</p>
-                </div>
-                <div class="px-6 pt-4 pb-20 space-y-4">
-                    <input type="password" id="apikey-input" class="w-full bg-white/5 border border-white/10 rounded-[12px] px-5 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyber-purple/50 transition-colors" data-i18n-placeholder="api_key_placeholder" placeholder="粘贴 API Key...">
-                    <div class="flex gap-3">
-                        <button onclick="clearApiKey()" class="flex-1 py-3.5 rounded-full bg-white/5 border border-white/10 text-white/60 text-sm font-medium active:scale-95 transition-transform" data-i18n="api_key_clear">清除</button>
-                        <button onclick="saveApiKey()" class="flex-1 py-3.5 rounded-full bg-cyber-purple text-white text-sm font-medium active:scale-95 transition-transform shadow-[0_0_15px_rgba(124,58,237,0.3)]" data-i18n="api_key_save">保存</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div id="budget-modal" class="fixed inset-0 z-[72] hidden">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeBudgetModal()"></div>
