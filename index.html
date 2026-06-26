@@ -10,8 +10,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="记账">
     <meta name="theme-color" content="#000000">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%23111'/><text x='90' y='125' font-size='100' text-anchor='middle' fill='%237c3aed'>₿</text></svg>">
-    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22NeuroFinance%22%2C%22short_name%22%3A%22%E8%AE%B0%E8%B4%A6%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%23000000%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20512%20512'%3E%3Crect%20width%3D'512'%20height%3D'512'%20rx%3D'100'%20fill%3D'%23111'%2F%3E%3Ctext%20x%3D'256'%20y%3D'360'%20font-size%3D'280'%20text-anchor%3D'middle'%20fill%3D'%237c3aed'%3E%E2%82%BF%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22NeuroFinance%22%2C%22short_name%22%3A%22%E8%AE%B0%E8%B4%A6%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%23000000%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22icon.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -328,16 +328,17 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         input, select { outline: none; }
 
+
         .scroll-picker {
             position: relative;
-            height: 150px;
+            height: 200px;
             overflow: hidden;
         }
         .scroll-picker::before, .scroll-picker::after {
             content: '';
             position: absolute;
             left: 0; right: 0;
-            height: 55px;
+            height: 40px;
             pointer-events: none;
             z-index: 2;
         }
@@ -379,7 +380,7 @@
         .scroll-picker-list {
             position: absolute;
             top: 0; left: 0; right: 0;
-            padding: 55px 0;
+            padding: 80px 0;
             overflow-y: auto;
             height: 100%;
             scroll-snap-type: y mandatory;
@@ -496,14 +497,14 @@
                         <h3 class="text-xl font-normal text-white tracking-wide" data-i18n="recent_bills">
                             近期账单
                         </h3>
-                        <div class="flex gap-3">
+                        <div class="flex gap-4 items-center">
                             <button onclick="openFilterCatModal()" class="flex items-center gap-1 text-[12px] font-normal text-white/60 whitespace-nowrap shrink-0 active:text-white transition-colors">
-                                 <span id="label-cat">分类</span>
+                                 <span id="label-cat" data-i18n="all_cats">全部</span>
                                  <span class="text-[8px] ml-0.5">▼</span>
                             </button>
                             <button onclick="cycleTypeFilter()" class="flex items-center gap-1 text-[12px] font-normal text-white/60 whitespace-nowrap shrink-0 active:text-white transition-colors">
                                  <span id="label-type">收支</span>
-                                 <span class="text-[8px] ml-0.5">▼</span>
+                                 <i data-lucide="repeat-2" class="w-3 h-3 ml-0.5 text-white/40"></i>
                             </button>
                         </div>
                     </div>
@@ -518,11 +519,11 @@
             <h2 class="text-3xl font-medium text-white tracking-tight" data-i18n="stats_title">收支统计</h2>
             <div class="filter-container overflow-x-auto no-scrollbar max-w-full">
                 <button onclick="setStatsFilter('month')" class="filter-pill active" id="filter-month" data-i18n="filter_month">本月</button>
-                <button onclick="setStatsFilter('3months')" class="filter-pill" id="filter-3months" data-i18n="filter_3m">近3月</button>
+                <button onclick="setStatsFilter('3months')" class="filter-pill" id="filter-3months" data-i18n="filter_3m">3月</button>
                 <button onclick="setStatsFilter('6months')" class="filter-pill" id="filter-6months" data-i18n="filter_6m">半年</button>
                 <button onclick="setStatsFilter('year')" class="filter-pill" id="filter-year" data-i18n="filter_year">1年</button>
                 <button onclick="setStatsFilter('all')" class="filter-pill" id="filter-all" data-i18n="filter_all">全部</button>
-                <button onclick="setStatsFilter('custom')" class="filter-pill" id="filter-custom" data-i18n="filter_custom">自定义</button>
+                <button onclick="setStatsFilter('custom')" class="filter-pill" id="filter-custom" data-i18n="filter_custom">范围</button>
             </div>
 
             <!-- Trend Chart -->
@@ -553,7 +554,7 @@
 
         <!-- === 页面 3: AI 对话 === -->
         <section id="page-chat" class="hidden flex flex-col h-[calc(100dvh-4rem)]">
-                        <div id="chat-box" class="flex-1 overflow-y-auto space-y-4 pb-44 no-scrollbar px-1 overscroll-contain"></div>
+                        <div id="chat-box" class="flex-1 overflow-y-auto space-y-4 pb-56 no-scrollbar px-1 overscroll-contain"></div>
         </section>
 
         <!-- === 页面 4: 个人中心 === -->
@@ -668,7 +669,7 @@
                 <i data-lucide="download" class="w-3 h-3 text-cyber-purple"></i><span data-i18n="export_btn">导出账单</span>
             </button>
         </div>
-        <div class="max-w-lg mx-auto flex gap-2 items-center bg-[#141416]/95 backdrop-blur-xl p-1.5 pr-1.5 rounded-[24px] border border-white/10 shadow-2xl">
+        <div class="max-w-lg mx-auto flex gap-2 items-center bg-[#141416]/95 backdrop-blur-xl p-1.5 pr-1.5 rounded-[24px] shadow-2xl">
             <button onclick="toggleSpeech()" id="mic-btn" class="w-9 h-9 rounded-full bg-white/5 text-white/60 flex items-center justify-center hover:bg-white/10 transition-all flex-shrink-0 border border-transparent">
                 <i data-lucide="mic" class="w-4 h-4"></i>
             </button>
@@ -715,15 +716,15 @@
                 </div>
 
                 <!-- Mode Tabs -->
-                <div class="filter-container w-full mb-6">
-                    <button onclick="setDateFilterMode('month')" id="df-tab-month" class="filter-pill active flex-1 text-center">按月</button>
+                <div class="filter-container w-full mb-3">
                     <button onclick="setDateFilterMode('year')" id="df-tab-year" class="filter-pill flex-1 text-center">按年</button>
+                    <button onclick="setDateFilterMode('month')" id="df-tab-month" class="filter-pill active flex-1 text-center">按月</button>
                     <button onclick="setDateFilterMode('day')" id="df-tab-day" class="filter-pill flex-1 text-center">按日</button>
                     <button onclick="setDateFilterMode('range')" id="df-tab-range" class="filter-pill flex-1 text-center">范围</button>
                 </div>
 
                 <!-- Scroll Picker Area -->
-                <div class="mb-6 min-h-[150px]">
+                <div class="mb-4 min-h-[200px]">
                     <div id="df-input-month" class="block animate-fade-in">
                         <div class="flex gap-2 scroll-picker-row">
                             <div class="flex-1 scroll-picker" id="sp-month-year"><div class="scroll-picker-highlight"></div><div class="scroll-picker-list"></div></div>
@@ -772,12 +773,15 @@
     <!-- Filter Category Select Modal (Simple) -->
     <div id="filter-cat-modal" class="fixed inset-0 z-[75] hidden">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeFilterCatModal()"></div>
-        <div class="absolute bottom-0 w-full bg-[#0a0a0c] rounded-t-[32px] border-t border-white/10 animate-slide-up shadow-2xl pb-safe h-[60vh] flex flex-col">
+        <div class="absolute bottom-0 w-full bg-[#0a0a0c] rounded-t-[32px] border-t border-white/10 animate-slide-up shadow-2xl pb-safe max-h-[70vh] flex flex-col">
             <div class="p-6 pb-3">
                 <div class="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5"></div>
                 <h3 class="text-lg font-semibold text-white mb-2" data-i18n="select_cat">选择分类</h3>
             </div>
-            <div class="flex-1 overflow-y-auto px-6 pb-8 space-y-2 no-scrollbar" id="filter-cat-list"></div>
+            <div class="flex-1 overflow-y-auto px-6 no-scrollbar" id="filter-cat-list"></div>
+            <div class="p-6 pt-3">
+                <button onclick="confirmFilterCat()" class="w-full bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-white font-bold py-3.5 rounded-full active:scale-[0.98] transition-transform shadow-[0_8px_24px_-4px_rgba(124,58,237,0.5)]" data-i18n="confirm">确认</button>
+            </div>
         </div>
     </div>
 
@@ -798,31 +802,30 @@
                         </button>
                     </div>
                 </div>
-                <form onsubmit="saveTx(event)" class="space-y-6">
+                <form onsubmit="saveTx(event)" class="space-y-4">
                     <input type="hidden" id="e-id">
-                    <div class="bg-white/5 p-1 rounded-full flex relative border border-white/5 h-12">
+                    <input type="hidden" id="e-cat" value="food">
+                    <div class="bg-white/5 p-1 rounded-full flex relative border border-white/5 h-11">
                         <div id="type-bg" class="absolute w-[calc(50%-4px)] h-[calc(100%-8px)] top-1 left-1 bg-white/10 rounded-full toggle-bg border border-white/5 shadow-sm transition-all duration-300"></div>
                         <button type="button" onclick="setType('expense')" class="flex-1 relative z-10 text-[14px] font-normal text-white transition-colors" id="btn-expense">支出</button>
                         <button type="button" onclick="setType('income')" class="flex-1 relative z-10 text-[14px] font-normal text-white/35 transition-colors" id="btn-income">收入</button>
                     </div>
-                    <div class="py-2">
-                        <input type="number" step="0.01" id="e-amount" class="w-full bg-transparent text-5xl font-light text-white placeholder:text-white/25 focus:outline-none font-num tracking-tighter" placeholder="0.00" required>
+                    <div class="py-5 relative">
+                        <input type="text" inputmode="decimal" id="e-amount" oninput="previewCalc()" class="w-full bg-transparent text-4xl font-light text-white placeholder:text-white/25 focus:outline-none font-num tracking-tighter" placeholder="0.00" autocomplete="off" required>
+                        <div id="calc-preview" class="absolute right-0 top-1/2 -translate-y-1/2 text-sm font-num text-teal-neon opacity-0 transition-opacity"></div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                         <div class="bg-white/5 rounded-[12px] px-5 pt-3 pb-4 border border-white/5 relative focus-within:border-cyber-purple/50 transition-colors flex flex-col">
-                            <label class="text-[12px] text-white/60 font-normal block" data-i18n="cat_label">分类</label>
-                            <select id="e-cat" class="w-full bg-transparent text-white text-base font-medium appearance-none relative z-10 mt-auto pt-2"></select>
+                    <div id="cat-grid" class="grid grid-cols-4 gap-x-2 gap-y-3 max-h-[200px] overflow-y-auto no-scrollbar"></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white/5 rounded-[12px] px-4 py-3 border border-white/5 focus-within:border-cyber-purple/50 transition-colors overflow-hidden">
+                            <label class="text-[11px] text-white/35 block mb-1" data-i18n="note_label">备注</label>
+                            <input type="text" id="e-desc" class="w-full min-w-0 bg-transparent text-white text-sm placeholder:text-white/25 focus:outline-none truncate" placeholder="...">
                         </div>
-                        <div class="bg-white/5 rounded-[12px] px-5 pt-3 pb-4 border border-white/5 focus-within:border-cyber-purple/50 transition-colors flex flex-col">
-                            <label class="text-[12px] text-white/60 font-normal block" data-i18n="date_label">日期</label>
-                            <input type="datetime-local" id="e-time" class="w-full bg-transparent text-white text-base font-medium font-num focus:outline-none mt-auto pt-2 [&::-webkit-calendar-picker-indicator]{display:none}">
+                        <div class="bg-white/5 rounded-[12px] px-4 py-3 border border-white/5 focus-within:border-cyber-purple/50 transition-colors overflow-hidden relative" onclick="document.getElementById('e-time').showPicker()">
+                            <label class="text-[11px] text-white/35 block mb-1" data-i18n="date_label">日期</label>
+                            <input type="datetime-local" id="e-time" class="w-full min-w-0 bg-transparent text-white text-sm font-num focus:outline-none [&::-webkit-calendar-picker-indicator]{opacity:0}">
                         </div>
                     </div>
-                    <div class="bg-white/5 rounded-[12px] px-5 py-4 border border-white/5 focus-within:border-cyber-purple/50 transition-colors">
-                        <label class="text-[12px] text-white/60 font-normal mb-1 block" data-i18n="note_label">备注</label>
-                        <input type="text" id="e-desc" class="w-full bg-transparent text-white text-base font-medium placeholder:text-white/25 focus:outline-none" placeholder="...">
-                    </div>
-                    <div class="pt-2">
+                    <div>
                         <button type="submit" class="w-full bg-cyber-purple text-white font-bold py-4 rounded-full hover:scale-[0.98] transition-transform shadow-[0_0_20px_rgba(124,58,237,0.4)] text-[16px] tracking-wide" data-i18n="save">保存</button>
                     </div>
                 </form>
@@ -858,8 +861,8 @@
                 <div class="flex-1 overflow-y-auto px-6 no-scrollbar">
                     <div id="book-list" class="grid grid-cols-2 gap-3 mb-4"></div>
                     <div class="border border-dashed border-white/10 rounded-[12px] p-4 flex items-center gap-3 cursor-pointer active:bg-white/5 transition-colors" onclick="document.getElementById('new-book-name').focus()">
-                        <input type="text" id="new-book-name" placeholder="新建账本..." class="flex-1 bg-transparent text-[14px] text-white placeholder:text-white/25 focus:outline-none" onkeydown="if(event.key==='Enter')addBook()">
-                        <button onclick="addBook()" class="text-cyber-purple text-[15px] font-medium px-4 py-2 rounded-full bg-cyber-purple/10 active:scale-95 transition-transform">添加</button>
+                        <input type="text" id="new-book-name" data-i18n-placeholder="book_new_placeholder" placeholder="新建账本..." class="flex-1 bg-transparent text-[14px] text-white placeholder:text-white/25 focus:outline-none" onkeydown="if(event.key==='Enter')addBook()">
+                        <button onclick="addBook()" class="text-cyber-purple text-[15px] font-medium px-4 py-2 rounded-full bg-cyber-purple/10 active:scale-95 transition-transform" data-i18n="book_add">添加</button>
                     </div>
                 </div>
                 <div class="pb-10"></div>
@@ -873,21 +876,21 @@
             <div class="w-full max-w-lg mx-auto p-6">
                 <div class="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5"></div>
                 <div class="flex items-center justify-between mb-5">
-                    <h3 class="text-lg font-semibold text-white tracking-tight">编辑账本</h3>
+                    <h3 class="text-lg font-semibold text-white tracking-tight" data-i18n="book_edit_title">编辑账本</h3>
                     <button onclick="closeBookEdit()" class="flex items-center justify-center"><i data-lucide="x" class="w-5 h-5 text-gray-600"></i></button>
                 </div>
                 <div class="space-y-4">
                     <div>
-                        <label class="text-[12px] text-white/40 mb-1.5 block">账本名称</label>
+                        <label class="text-[12px] text-white/40 mb-1.5 block" data-i18n="book_name_label">账本名称</label>
                         <input type="text" id="edit-book-name-input" class="w-full bg-white/5 border border-white/10 rounded-[12px] px-4 py-3 text-[15px] text-white placeholder:text-white/25 focus:outline-none focus:border-cyber-purple/50 transition-colors">
                     </div>
                     <button onclick="saveBookName()" class="w-full py-3.5 rounded-full bg-cyber-purple text-white text-[15px] font-medium active:scale-95 transition-transform shadow-[0_0_15px_rgba(124,58,237,0.3)]">保存</button>
                 </div>
                 <div id="delete-book-section" class="mt-8 pt-6 border-t border-white/5 hidden">
-                    <p class="text-[13px] text-red-400/80 mb-3">删除账本将清除该账本下所有记录，此操作不可撤销。</p>
-                    <label class="text-[12px] text-white/40 mb-1.5 block">输入账本名称以确认删除</label>
-                    <input type="text" id="delete-book-confirm-input" oninput="checkDeleteBookInput()" class="w-full bg-white/5 border border-white/10 rounded-[12px] px-4 py-3 text-[15px] text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/50 transition-colors" placeholder="输入账本名称...">
-                    <button id="btn-confirm-delete-book" onclick="confirmDeleteBook()" disabled class="w-full mt-3 py-3.5 rounded-full bg-red-500/20 text-red-400 text-[15px] font-medium active:scale-95 transition-transform disabled:opacity-30 disabled:pointer-events-none">删除账本</button>
+                    <p class="text-[13px] text-red-400/80 mb-3" data-i18n="book_delete_warn">删除账本将清除该账本下所有记录，此操作不可撤销。</p>
+                    <label class="text-[12px] text-white/40 mb-1.5 block" data-i18n="book_delete_confirm_label">输入账本名称以确认删除</label>
+                    <input type="text" id="delete-book-confirm-input" oninput="checkDeleteBookInput()" class="w-full bg-white/5 border border-white/10 rounded-[12px] px-4 py-3 text-[15px] text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/50 transition-colors" data-i18n-placeholder="book_delete_confirm_placeholder" placeholder="输入账本名称...">
+                    <button id="btn-confirm-delete-book" onclick="confirmDeleteBook()" disabled class="w-full mt-3 py-3.5 rounded-full bg-red-500/20 text-red-400 text-[15px] font-medium active:scale-95 transition-transform disabled:opacity-30 disabled:pointer-events-none" data-i18n="book_delete_btn">删除账本</button>
                 </div>
             </div>
         </div>
@@ -991,8 +994,8 @@
 
     <div id="category-modal" class="fixed inset-0 z-[70] hidden">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300" onclick="closeCategoryManager()"></div>
-        <div class="absolute bottom-0 w-full bg-[#0a0a0c] rounded-t-[32px] border-t border-white/10 animate-slide-up shadow-2xl h-[85vh] flex flex-col pb-safe">
-            <div class="w-full max-w-lg mx-auto flex flex-col h-full">
+        <div class="absolute bottom-0 w-full bg-[#0a0a0c] rounded-t-[32px] border-t border-white/10 animate-slide-up shadow-2xl max-h-[85vh] flex flex-col pb-safe">
+            <div class="w-full max-w-lg mx-auto flex flex-col">
                 <div class="p-6 pb-2">
                     <div class="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5"></div>
                     <div class="flex justify-between items-center mb-4">
@@ -1006,11 +1009,11 @@
                     </div>
                     <p class="text-[10px] text-white/35 text-center mb-2 font-num" id="cat-limit-info">0/15</p>
                 </div>
-                <div class="flex-1 overflow-y-auto px-6 space-y-3 no-scrollbar" id="category-list"></div>
-                <div class="p-6 pb-10 border-t border-white/5 bg-[#0a0a0c]">
+                <div class="flex-1 overflow-y-auto px-6 no-scrollbar" id="category-list"></div>
+                <div class="p-6 border-t border-white/5 bg-[#0a0a0c]">
                     <div class="flex gap-3">
                         <input type="text" id="new-cat-name" data-i18n-placeholder="new_cat_placeholder" placeholder="新分类..." class="flex-1 bg-white/5 border border-white/10 rounded-[12px] px-4 py-3 text-white text-sm focus:outline-none focus:border-cyber-purple/50 transition-colors">
-                        <button onclick="addNewCategory()" class="bg-cyber-purple/20 border border-cyber-purple/30 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-cyber-purple/30 active:scale-95 transition-all">
+                        <button onclick="addNewCategory()" class="bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-white w-12 h-12 rounded-full flex items-center justify-center active:scale-95 transition-all shadow-[0_8px_24px_-4px_rgba(124,58,237,0.5)]">
                             <i data-lucide="plus" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -1025,21 +1028,23 @@
         const SYSTEM_EXPENSE_KEYS = ['food', 'transport', 'tech', 'utilities', 'entertainment', 'other', 'shopping'];
         const SYSTEM_INCOME_KEYS = ['salary', 'bonus', 'investment', 'other_in'];
 
-        let EXPENSE_CATS = {
-            food: { label: '餐饮', color: '#ff9500', icon: 'coffee' }, 
-            transport: { label: '交通', color: '#00d4ff', icon: 'car' }, 
+        const DEFAULT_EXPENSE_CATS = {
+            food: { label: '餐饮', color: '#ff9500', icon: 'coffee' },
+            transport: { label: '交通', color: '#00d4ff', icon: 'car' },
             shopping: { label: '购物', color: '#ec4899', icon: 'shopping-bag' },
-            tech: { label: '数码', color: '#9d46ff', icon: 'cpu' }, 
-            utilities: { label: '生活', color: '#32d74b', icon: 'home' }, 
-            entertainment: { label: '娱乐', color: '#ff375f', icon: 'gamepad-2' }, 
+            tech: { label: '数码', color: '#9d46ff', icon: 'cpu' },
+            utilities: { label: '生活', color: '#32d74b', icon: 'home' },
+            entertainment: { label: '娱乐', color: '#ff375f', icon: 'gamepad-2' },
             other: { label: '其他', color: '#8e8e93', icon: 'package' }
         };
-        let INCOME_CATS = {
+        const DEFAULT_INCOME_CATS = {
             salary: { label: '工资', color: '#00f2ea', icon: 'banknote' },
             bonus: { label: '奖金', color: '#00d0c8', icon: 'gift' },
             investment: { label: '理财', color: '#00ffe5', icon: 'trending-up' },
             other_in: { label: '其他', color: '#00f2ea', icon: 'wallet' }
         };
+        let EXPENSE_CATS = {...DEFAULT_EXPENSE_CATS, ...JSON.parse(localStorage.getItem('custom_expense_cats') || '{}')};
+        let INCOME_CATS = {...DEFAULT_INCOME_CATS, ...JSON.parse(localStorage.getItem('custom_income_cats') || '{}')};
 
         const PRESET_COLORS = ['#ff0055', '#00ff9f', '#00ccff', '#ffcc00', '#ff00cc', '#9d46ff', '#00ffea', '#ff5e00'];
 
@@ -1063,6 +1068,8 @@
             currentBook = bookId;
             localStorage.setItem('current_book', bookId);
             txs = JSON.parse(localStorage.getItem(getTxKey()) || '[]');
+            budgets = JSON.parse(localStorage.getItem(getBudgetKey()) || '{}');
+            totalBudget = parseFloat(localStorage.getItem(getTotalBudgetKey()) || '0');
             renderAll();
             renderBookSelector();
             showToast(`${t('toast_switched_to')}「${books.find(b=>b.id===bookId)?.name||''}」`);
@@ -1084,7 +1091,8 @@
             end: null
         };
         let listFilterType = 'all'; // Default to all (全部收支)
-        let listFilterCat = 'all';
+        let listFilterCat = 'all'; // 'all' or array of keys
+        let tempFilterCats = [];
 
         let recognition = null;
         let isListening = false;
@@ -1094,8 +1102,12 @@
         let undoStack = []; // {action, data} for undo
         let pendingAction = null; // {type, payload, message} awaiting confirmation
         let multiTurnState = null; // {step, partial} for multi-turn dialogue
-        let budgets = JSON.parse(localStorage.getItem('budgets') || '{}');
-        let totalBudget = parseFloat(localStorage.getItem('total_budget') || '0');
+        let chatHistory = []; // last 5 messages for context
+        let catMemory = JSON.parse(localStorage.getItem('cat_memory') || '{}'); // desc→category learning
+        function getBudgetKey() { return `budgets_${currentBook}`; }
+        function getTotalBudgetKey() { return `total_budget_${currentBook}`; }
+        let budgets = JSON.parse(localStorage.getItem(getBudgetKey()) || (currentBook === 'default' ? localStorage.getItem('budgets') : null) || '{}');
+        let totalBudget = parseFloat(localStorage.getItem(getTotalBudgetKey()) || (currentBook === 'default' ? localStorage.getItem('total_budget') : null) || '0');
         let shortcuts = JSON.parse(localStorage.getItem('shortcuts') || '{}'); // {keyword: {amount, cat, type, desc}}
         let recurringTxs = JSON.parse(localStorage.getItem('recurringTxs') || '[]');
 
@@ -1123,8 +1135,8 @@
                 ai_guide: '想记点什么？让我来帮你\n试试这样对我说：\n\n　"麦当劳25元"\n　"打车18.8元"\n　"昨天买衣服199"\n　"本周花了多少钱"',
                 summary_btn: '月度总结', input_placeholder: '输入...',
                 cat_manage: '分类管理', export_short: '导出',
-                filter_month: '本月', filter_3m: '近3月', filter_6m: '半年',
-                filter_year: '1年', filter_all: '全部', filter_custom: '自定义',
+                filter_month: '本月', filter_3m: '3月', filter_6m: '半年',
+                filter_year: '1年', filter_all: '全部', filter_custom: '范围',
                 filter_time: '筛选时间', cancel: '取消', confirm: '确认',
                 by_month: '按月', by_year: '按年', by_day: '按日', by_range: '范围',
                 start: '开始', end: '结束',
@@ -1156,6 +1168,10 @@
                 close: '关闭', new_cat_placeholder: '新分类...',
                 enter_book_name: '请输入账本名称', book_created: '已创建账本',
                 book_deleted: '已删除账本', cannot_delete_current: '不能删除当前账本',
+                book_edit_title: '编辑账本', book_name_label: '账本名称', book_new_placeholder: '新建账本...',
+                book_add: '添加', book_delete_warn: '删除账本将清除该账本下所有记录，此操作不可撤销。',
+                book_delete_confirm_label: '输入账本名称以确认删除', book_delete_confirm_placeholder: '输入账本名称...',
+                book_delete_btn: '删除账本',
                 toast_updated: '已更新', toast_recorded: '已记录', toast_deleted: '已删除',
                 toast_switched_to: '已切换到', toast_avatar_updated: '头像已更新', toast_avatar_restored: '已恢复默认头像', toast_nickname_updated: '昵称已更新',
                 avatar_upload: '上传头像', avatar_restore: '恢复默认头像', avatar_cancel: '取消',
@@ -1183,11 +1199,11 @@
                 summary_btn: 'Summary', input_placeholder: 'Type...',
                 cat_manage: 'Categories', export_short: 'Export',
                 filter_month: 'Mon.', filter_3m: '3M', filter_6m: '6M',
-                filter_year: '1Y', filter_all: 'All', filter_custom: 'Custom',
+                filter_year: '1Y', filter_all: 'All', filter_custom: 'Range',
                 filter_time: 'Date Filter', cancel: 'Cancel', confirm: 'Done',
                 by_month: 'Month', by_year: 'Year', by_day: 'Day', by_range: 'Range',
                 start: 'From', end: 'To',
-                all_cats: 'All Categories', all_types: 'All Types', all_expense: 'Expenses', all_income: 'Income',
+                all_cats: 'Category', all_types: 'Type', all_expense: 'Expense', all_income: 'Income',
                 this_month: 'This Month', select_cat: 'Category',
                 modal_add: 'New Entry', modal_edit: 'Edit',
                 cat_label: 'Category', date_label: 'Date', note_label: 'Note',
@@ -1196,13 +1212,13 @@
                 book_daily: 'Daily', book_travel: 'Travel', book_family: 'Family',
                 book_business: 'Business', book_reimburse: 'Reimburse', book_company: 'Company', book_team: 'Team',
                 cat_food: 'Food', cat_transport: 'Transport', cat_shopping: 'Shopping', cat_tech: 'Tech',
-                cat_utilities: 'Utilities', cat_entertainment: 'Fun', cat_other: 'Other',
-                cat_salary: 'Salary', cat_bonus: 'Bonus', cat_investment: 'Investment', cat_other_in: 'Other',
+                cat_utilities: 'Life', cat_entertainment: 'Entertainment', cat_other: 'Other',
+                cat_salary: 'Salary', cat_bonus: 'Bonus', cat_investment: 'Finance', cat_other_in: 'Other',
                 total_budget: 'Total', save: 'Save', add: 'Add',
                 budget_title: 'Budget', budget_stats: 'Budget', monthly_budget: 'Monthly Budget',
                 cat_budget: 'By category (optional)', amount_placeholder: 'Amount',
                 new_book: 'New book name...', note_placeholder: 'Add a note...',
-                no_stats_data: 'No data yet', expense_section: 'Expenses', income_section: 'Income',
+                no_stats_data: 'No data yet', expense_section: 'Expense', income_section: 'Income',
                 no_budget_yet: 'No budgets set', please_select_cat: 'Please select a category',
                 please_enter_amount: 'Please enter a valid amount',
                 budget_set_toast: 'budget set to', budget_removed_toast: 'budget removed',
@@ -1215,6 +1231,10 @@
                 close: 'Close', new_cat_placeholder: 'New category...',
                 enter_book_name: 'Please enter book name', book_created: 'Book created',
                 book_deleted: 'Book deleted', cannot_delete_current: 'Cannot delete current book',
+                book_edit_title: 'Edit Book', book_name_label: 'Book Name', book_new_placeholder: 'New book...',
+                book_add: 'Add', book_delete_warn: 'Deleting this book will erase all its records. This cannot be undone.',
+                book_delete_confirm_label: 'Type book name to confirm', book_delete_confirm_placeholder: 'Enter book name...',
+                book_delete_btn: 'Delete Book',
                 toast_updated: 'Updated', toast_recorded: 'Recorded', toast_deleted: 'Deleted',
                 toast_switched_to: 'Switched to', toast_avatar_updated: 'Avatar updated', toast_avatar_restored: 'Default avatar restored', toast_nickname_updated: 'Nickname updated',
                 avatar_upload: 'Upload Photo', avatar_restore: 'Restore Default', avatar_cancel: 'Cancel',
@@ -1242,11 +1262,11 @@
                 summary_btn: '月次まとめ', input_placeholder: '入力...',
                 cat_manage: 'カテゴリ管理', export_short: 'エクスポート',
                 filter_month: '今月', filter_3m: '3ヶ月', filter_6m: '半年',
-                filter_year: '1年', filter_all: '全て', filter_custom: 'カスタム',
+                filter_year: '1年', filter_all: '全部', filter_custom: '範囲',
                 filter_time: '期間を選択', cancel: 'キャンセル', confirm: '確認',
                 by_month: '月別', by_year: '年別', by_day: '日別', by_range: '範囲',
                 start: '開始', end: '終了',
-                all_cats: '全カテゴリ', all_types: '全て', all_expense: '支出のみ', all_income: '収入のみ',
+                all_cats: 'カテゴリ', all_types: '収支', all_expense: '支出', all_income: '収入',
                 this_month: '今月', select_cat: 'カテゴリ選択',
                 modal_add: '新規追加', modal_edit: '編集',
                 cat_label: 'カテゴリ', date_label: '日付', note_label: 'メモ',
@@ -1256,7 +1276,7 @@
                 book_business: 'ビジネス', book_reimburse: '経費', book_company: '会社', book_team: 'チーム',
                 cat_food: '食費', cat_transport: '交通', cat_shopping: '買い物', cat_tech: 'デジタル',
                 cat_utilities: '生活', cat_entertainment: '娯楽', cat_other: 'その他',
-                cat_salary: '給料', cat_bonus: 'ボーナス', cat_investment: '投資', cat_other_in: 'その他',
+                cat_salary: '給料', cat_bonus: 'ボーナス', cat_investment: '資産運用', cat_other_in: 'その他',
                 total_budget: '総予算', save: '保存', add: '追加',
                 budget_title: '予算設定', budget_stats: '予算', monthly_budget: '月間予算',
                 cat_budget: 'カテゴリ予算（任意）', amount_placeholder: '金額',
@@ -1274,6 +1294,10 @@
                 close: '閉じる', new_cat_placeholder: '新しいカテゴリ...',
                 enter_book_name: '帳簿名を入力', book_created: '帳簿を作成',
                 book_deleted: '帳簿を削除', cannot_delete_current: '使用中の帳簿は削除できません',
+                book_edit_title: '帳簿を編集', book_name_label: '帳簿名', book_new_placeholder: '新しい帳簿...',
+                book_add: '追加', book_delete_warn: '帳簿を削除すると全記録が消えます。元に戻せません。',
+                book_delete_confirm_label: '帳簿名を入力して確認', book_delete_confirm_placeholder: '帳簿名を入力...',
+                book_delete_btn: '帳簿を削除',
                 toast_updated: '更新しました', toast_recorded: '記録しました', toast_deleted: '削除しました',
                 toast_switched_to: '切り替え:', toast_avatar_updated: 'アイコンを更新しました', toast_avatar_restored: 'デフォルトアイコンに戻しました', toast_nickname_updated: 'ニックネームを更新しました',
                 avatar_upload: '写真をアップロード', avatar_restore: 'デフォルトに戻す', avatar_cancel: 'キャンセル',
@@ -1301,11 +1325,11 @@
                 summary_btn: '월간 요약', input_placeholder: '입력...',
                 cat_manage: '카테고리 관리', export_short: '내보내기',
                 filter_month: '이번달', filter_3m: '3개월', filter_6m: '6개월',
-                filter_year: '1년', filter_all: '전체', filter_custom: '사용자정의',
+                filter_year: '1년', filter_all: '전체', filter_custom: '범위',
                 filter_time: '기간 선택', cancel: '취소', confirm: '확인',
                 by_month: '월별', by_year: '연별', by_day: '일별', by_range: '범위',
                 start: '시작', end: '종료',
-                all_cats: '전체 카테고리', all_types: '전체', all_expense: '지출만', all_income: '수입만',
+                all_cats: '카테고리', all_types: '수지', all_expense: '지출', all_income: '수입',
                 this_month: '이번달', select_cat: '카테고리 선택',
                 modal_add: '새 기록', modal_edit: '수정',
                 cat_label: '카테고리', date_label: '날짜', note_label: '메모',
@@ -1315,7 +1339,7 @@
                 book_business: '사업', book_reimburse: '경비', book_company: '회사', book_team: '팀',
                 cat_food: '식비', cat_transport: '교통', cat_shopping: '쇼핑', cat_tech: '디지털',
                 cat_utilities: '생활', cat_entertainment: '여가', cat_other: '기타',
-                cat_salary: '급여', cat_bonus: '보너스', cat_investment: '투자', cat_other_in: '기타',
+                cat_salary: '급여', cat_bonus: '보너스', cat_investment: '재테크', cat_other_in: '기타',
                 total_budget: '총 예산', save: '저장', add: '추가',
                 budget_title: '예산 설정', budget_stats: '예산', monthly_budget: '월 예산',
                 cat_budget: '카테고리 예산 (선택)', amount_placeholder: '금액',
@@ -1333,6 +1357,10 @@
                 close: '닫기', new_cat_placeholder: '새 카테고리...',
                 enter_book_name: '가계부 이름을 입력하세요', book_created: '가계부 생성됨',
                 book_deleted: '가계부 삭제됨', cannot_delete_current: '현재 가계부는 삭제할 수 없습니다',
+                book_edit_title: '가계부 편집', book_name_label: '가계부 이름', book_new_placeholder: '새 가계부...',
+                book_add: '추가', book_delete_warn: '가계부를 삭제하면 모든 기록이 삭제됩니다. 되돌릴 수 없습니다.',
+                book_delete_confirm_label: '가계부 이름을 입력하여 확인', book_delete_confirm_placeholder: '가계부 이름 입력...',
+                book_delete_btn: '가계부 삭제',
                 toast_updated: '업데이트됨', toast_recorded: '기록됨', toast_deleted: '삭제됨',
                 toast_switched_to: '전환:', toast_avatar_updated: '아바타 업데이트됨', toast_avatar_restored: '기본 아바타로 복원됨', toast_nickname_updated: '닉네임 업데이트됨',
                 avatar_upload: '사진 업로드', avatar_restore: '기본으로 복원', avatar_cancel: '취소',
@@ -1354,6 +1382,7 @@
             localStorage.setItem('lang', lang);
             applyI18n();
             renderAll();
+            renderBookSelector();
             chatWelcomed = false;
             const chatBox = document.getElementById('chat-box');
             if (chatBox) chatBox.innerHTML = '';
@@ -1405,8 +1434,6 @@
             // Date filter modal
             const dfTitle = document.querySelector('#date-filter-modal h3');
             if (dfTitle) dfTitle.textContent = t('filter_time');
-            const dfCancel = document.querySelector('#date-filter-modal [onclick*="closeDateFilterModal"]');
-            if (dfCancel) dfCancel.textContent = t('cancel');
             const dfConfirm = document.getElementById('df-confirm-btn');
             if (dfConfirm) dfConfirm.textContent = t('confirm');
             const dfMonth = document.getElementById('df-tab-month');
@@ -1510,7 +1537,7 @@
             document.getElementById('name-modal').classList.add('hidden');
         }
 
-        function saveBudgets() { localStorage.setItem('budgets', JSON.stringify(budgets)); }
+        function saveBudgets() { localStorage.setItem(getBudgetKey(), JSON.stringify(budgets)); }
         function saveShortcuts() { localStorage.setItem('shortcuts', JSON.stringify(shortcuts)); }
 
         function checkAndApplyRecurring() {
@@ -1536,7 +1563,13 @@
                     if (!localStorage.getItem(key)) { shouldAdd = true; localStorage.setItem(key, '1'); }
                 }
                 if (shouldAdd) {
-                    txs.push({ id: Date.now() + Math.random(), date: now.toISOString(), desc: r.desc, amount: r.amount, cat: r.cat, type: r.type });
+                    const bookId = r.bookId || 'default';
+                    const txKey = `txs_${bookId}`;
+                    const bookTxs = bookId === currentBook ? txs : JSON.parse(localStorage.getItem(txKey) || '[]');
+                    bookTxs.push({ id: Date.now() + Math.floor(Math.random() * 10000), date: now.toISOString(), desc: r.desc, amount: r.amount, cat: r.cat, type: r.type });
+                    if (bookId !== currentBook) {
+                        localStorage.setItem(txKey, JSON.stringify(bookTxs));
+                    }
                 }
             });
         }
@@ -1596,7 +1629,7 @@
         function genYears() {
             const y = new Date().getFullYear();
             const arr = [];
-            for(let i=y-5; i<=y; i++) arr.push({value: i, label: String(i)});
+            for(let i=y-5; i<=y+2; i++) arr.push({value: i, label: String(i)});
             return arr;
         }
         function genMonths() {
@@ -1623,17 +1656,20 @@
                 listEl.appendChild(div);
             });
 
-            // Scroll to default
             const idx = items.findIndex(i => i.value === defaultValue);
-            if (idx >= 0) {
-                setTimeout(() => { listEl.scrollTop = idx * 40; updatePickerActive(listEl); }, 50);
-            }
+            listEl.dataset.defaultIdx = idx >= 0 ? idx : 0;
+            setTimeout(() => { scrollPickerTo(listEl, idx >= 0 ? idx : 0); }, 50);
 
             listEl.addEventListener('scroll', () => { updatePickerActive(listEl); });
         }
 
+        function scrollPickerTo(listEl, idx) {
+            listEl.scrollTop = idx * 40;
+            updatePickerActive(listEl);
+        }
+
         function updatePickerActive(listEl) {
-            const center = listEl.scrollTop + 55 + 20;
+            const center = listEl.scrollTop + 80 + 20;
             listEl.querySelectorAll('.scroll-picker-item').forEach(item => {
                 const itemCenter = item.offsetTop + 20;
                 const dist = Math.abs(center - itemCenter);
@@ -1648,7 +1684,7 @@
         function getPickerValue(containerId) {
             const container = document.getElementById(containerId);
             const listEl = container.querySelector('.scroll-picker-list');
-            const center = listEl.scrollTop + 55 + 20;
+            const center = listEl.scrollTop + 80 + 20;
             let closest = null;
             let minDist = Infinity;
             listEl.querySelectorAll('.scroll-picker-item').forEach(item => {
@@ -1759,7 +1795,9 @@
             const name = document.getElementById('new-book-name').value.trim();
             if (!name) { showToast(t('enter_book_name'), 'error'); return; }
             const id = 'book_' + Date.now();
-            books.splice(1, 0, { id, name, icon: 'book-open', color: PRESET_COLORS[books.length % PRESET_COLORS.length] });
+            const firstNonCustomIdx = books.findIndex((b, i) => i > 0 && DEFAULT_BOOKS.some(d => d.id === b.id));
+            const insertIdx = firstNonCustomIdx > 0 ? firstNonCustomIdx : books.length;
+            books.splice(insertIdx, 0, { id, name, icon: 'book-open', color: PRESET_COLORS[books.length % PRESET_COLORS.length] });
             localStorage.setItem('books', JSON.stringify(books));
             document.getElementById('new-book-name').value = '';
             renderBookList();
@@ -1773,6 +1811,10 @@
             books = books.filter(x => x.id !== id);
             localStorage.setItem('books', JSON.stringify(books));
             localStorage.removeItem(`txs_${id}`);
+            localStorage.removeItem(`budgets_${id}`);
+            localStorage.removeItem(`total_budget_${id}`);
+            recurringTxs = recurringTxs.filter(r => r.bookId !== id);
+            localStorage.setItem('recurringTxs', JSON.stringify(recurringTxs));
             renderBookList();
             renderBookSelector();
             showToast(`${t('book_deleted')}「${b?.name||''}」`);
@@ -1795,7 +1837,7 @@
         function saveTotalBudget() {
             const val = parseFloat(document.getElementById('budget-total-input').value);
             totalBudget = val > 0 ? val : 0;
-            localStorage.setItem('total_budget', totalBudget);
+            localStorage.setItem(getTotalBudgetKey(), totalBudget);
             closeBudgetModal();
             renderAll();
             showToast(totalBudget > 0 ? `${t('total_budget_set')} ${totalBudget.toLocaleString()}` : t('total_budget_cleared'));
@@ -1838,7 +1880,7 @@
             if (!cat) { showToast(t('please_select_cat'), 'error'); return; }
             if (!amount || amount <= 0) { showToast(t('please_enter_amount'), 'error'); return; }
             budgets[cat] = amount;
-            localStorage.setItem('budgets', JSON.stringify(budgets));
+            localStorage.setItem(getBudgetKey(), JSON.stringify(budgets));
             document.getElementById('budget-amount-input').value = '';
             const catLabel = t('cat_' + cat) || (EXPENSE_CATS[cat] || {label: cat}).label;
             showToast(`${catLabel} ${t('budget_set_toast')} ${amount.toLocaleString()}`);
@@ -1850,7 +1892,7 @@
         function removeBudget(cat) {
             const catLabel = t('cat_' + cat) || (EXPENSE_CATS[cat] || {label: cat}).label;
             delete budgets[cat];
-            localStorage.setItem('budgets', JSON.stringify(budgets));
+            localStorage.setItem(getBudgetKey(), JSON.stringify(budgets));
             showToast(`${catLabel} ${t('budget_removed_toast')}`);
             renderBudgetList();
             openBudgetModal();
@@ -1995,6 +2037,8 @@
             content.addEventListener('click', e => { if (el.classList.contains('swiped')) { el.classList.remove('swiped'); e.stopPropagation(); e.preventDefault(); } });
         }
 
+        function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
         function deleteTx(id) {
             const idx = txs.findIndex(t => t.id === id);
             if (idx === -1) return;
@@ -2043,7 +2087,8 @@
         // --- Date Filter Modal Logic ---
         function openDateFilterModal() {
             document.getElementById('date-filter-modal').classList.remove('hidden');
-            setDateFilterMode(dateFilterState.mode); // Restore visuals
+            setDateFilterMode(dateFilterState.mode);
+            initDatePicker();
         }
 
         function closeDateFilterModal() {
@@ -2065,6 +2110,15 @@
                 }
             });
             document.getElementById('date-filter-modal').dataset.tempMode = mode;
+            setTimeout(() => {
+                const container = document.getElementById(`df-input-${mode}`);
+                if (container) {
+                    container.querySelectorAll('.scroll-picker-list').forEach(listEl => {
+                        const idx = parseInt(listEl.dataset.defaultIdx || '0');
+                        scrollPickerTo(listEl, idx);
+                    });
+                }
+            }, 30);
         }
 
         function applyDateFilter() {
@@ -2111,7 +2165,8 @@
                 const d = getPickerValue('sp-day-day');
                 const val = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 dateFilterState.value = val;
-                labelText = `${m}/${d}`;
+                const nowY = new Date().getFullYear();
+                labelText = y === nowY ? `${m}.${d}` : `${y}.${m}.${d}`;
             } else if (mode === 'range') {
                 const sy = getPickerValue('sp-rs-year');
                 const sm = getPickerValue('sp-rs-month');
@@ -2121,7 +2176,8 @@
                 const ed = getPickerValue('sp-re-day');
                 dateFilterState.start = `${sy}-${String(sm).padStart(2,'0')}-${String(sd).padStart(2,'0')}`;
                 dateFilterState.end = `${ey}-${String(em).padStart(2,'0')}-${String(ed).padStart(2,'0')}`;
-                labelText = `${sm}/${sd} - ${em}/${ed}`;
+                const nowY = new Date().getFullYear();
+                labelText = (sy === nowY && ey === nowY) ? `${sm}.${sd} - ${em}.${ed}` : `${sy}.${sm}.${sd} - ${ey}.${em}.${ed}`;
             }
 
             document.getElementById('label-date').innerText = labelText;
@@ -2153,10 +2209,12 @@
             const chatInput = document.getElementById('chat-input-wrapper');
             if (page === 'chat') {
                 chatInput.classList.remove('hidden'); initChatWelcome();
-                document.body.style.background = '#000';
+                document.body.style.background = 'radial-gradient(120% 35% at 50% 0%, rgba(124,58,237,0.35) 0%, rgba(88,28,195,0.12) 50%, transparent 100%) no-repeat, #000';
+                document.body.style.overflow = 'hidden';
             } else {
                 chatInput.classList.add('hidden');
                 document.body.style.background = '';
+                document.body.style.overflow = '';
             }
 
             if(page === 'stats') { renderCharts(); renderBudgetBars(); }
@@ -2305,32 +2363,40 @@
             let labels = [];
             let expensePoints = [];
             let incomePoints = [];
+            let labelKeys = [];
 
             if (isDaily) {
-                const limitDay = now.getDate();
-                labels = Array.from({length: limitDay}, (_, i) => i + 1);
+                const startDay = new Date(startDate);
+                startDay.setHours(0,0,0,0);
+                const totalDays = Math.ceil((now - startDay) / (24*60*60*1000)) + 1;
+                const useOffset = (now.getMonth() !== startDay.getMonth() || now.getFullYear() !== startDay.getFullYear());
+                const limitDay = useOffset ? totalDays : now.getDate();
+                labels = useOffset
+                    ? Array.from({length: limitDay}, (_, i) => { const d = new Date(startDay.getTime() + i*24*60*60*1000); return `${d.getMonth()+1}/${d.getDate()}`; })
+                    : Array.from({length: limitDay}, (_, i) => i + 1);
                 expensePoints = new Array(limitDay).fill(0);
                 incomePoints = new Array(limitDay).fill(0);
 
                 expenseTxs.forEach(t => {
                     const d = new Date(t.date);
-                    const day = d.getDate();
-                    if (day <= limitDay) expensePoints[day - 1] += t.amount;
+                    const idx = useOffset ? Math.floor((d - startDay) / (24*60*60*1000)) : d.getDate() - 1;
+                    if (idx >= 0 && idx < limitDay) expensePoints[idx] += t.amount;
                 });
                 incomeTxs.forEach(t => {
                     const d = new Date(t.date);
-                    const day = d.getDate();
-                    if (day <= limitDay) incomePoints[day - 1] += t.amount;
+                    const idx = useOffset ? Math.floor((d - startDay) / (24*60*60*1000)) : d.getDate() - 1;
+                    if (idx >= 0 && idx < limitDay) incomePoints[idx] += t.amount;
                 });
             } else {
                 const expMonthMap = {};
                 const incMonthMap = {};
+                labelKeys = [];
                 let ptr = new Date(startDate);
                 ptr.setDate(1);
 
                 while(ptr <= now) {
-                    const k = `${ptr.getMonth()+1}`;
-                    if(!labels.includes(k)) labels.push(k);
+                    const k = `${ptr.getFullYear()}-${ptr.getMonth()+1}`;
+                    if(!labelKeys.includes(k)) labelKeys.push(k);
                     expMonthMap[k] = 0;
                     incMonthMap[k] = 0;
                     ptr.setMonth(ptr.getMonth() + 1);
@@ -2338,17 +2404,18 @@
 
                 expenseTxs.forEach(t => {
                     const d = new Date(t.date);
-                    const k = `${d.getMonth()+1}`;
+                    const k = `${d.getFullYear()}-${d.getMonth()+1}`;
                     if (expMonthMap[k] !== undefined) expMonthMap[k] += t.amount;
                 });
                 incomeTxs.forEach(t => {
                     const d = new Date(t.date);
-                    const k = `${d.getMonth()+1}`;
+                    const k = `${d.getFullYear()}-${d.getMonth()+1}`;
                     if (incMonthMap[k] !== undefined) incMonthMap[k] += t.amount;
                 });
 
-                expensePoints = labels.map(l => expMonthMap[l]);
-                incomePoints = labels.map(l => incMonthMap[l]);
+                labels = labelKeys.map(k => k.split('-')[1]);
+                expensePoints = labelKeys.map(k => expMonthMap[k]);
+                incomePoints = labelKeys.map(k => incMonthMap[k]);
             }
 
             if (trendChart) trendChart.destroy();
@@ -2374,8 +2441,8 @@
                         pointBackgroundColor: '#7c3aed',
                         pointBorderColor: '#7c3aed',
                         pointBorderWidth: 0,
-                        pointRadius: 1.5,
-                        pointHoverRadius: 4,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
                         tension: 0.4,
                         fill: true
                     } : {
@@ -2387,8 +2454,8 @@
                         pointBackgroundColor: '#10b981',
                         pointBorderColor: '#10b981',
                         pointBorderWidth: 0,
-                        pointRadius: 1.5,
-                        pointHoverRadius: 4,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
                         tension: 0.4,
                         fill: true
                     }]
@@ -2399,19 +2466,37 @@
                     plugins: {
                         legend: { display: false },
                         tooltip: {
+                            enabled: false,
                             mode: 'index',
                             intersect: false,
-                            backgroundColor: 'rgba(20, 20, 25, 0.9)',
-                            titleColor: '#fff',
-                            bodyColor: '#ccc',
-                            borderColor: 'rgba(255,255,255,0.1)',
-                            borderWidth: 1,
-                            padding: 10,
-                            displayColors: true,
-                            callbacks: {
-                                label: function(context) {
-                                    return ` ${context.dataset.label}: ${context.parsed.y.toLocaleString()}`;
+                            external: function(context) {
+                                let el = document.getElementById('chart-tooltip');
+                                if (!el) {
+                                    el = document.createElement('div');
+                                    el.id = 'chart-tooltip';
+                                    el.style.cssText = 'position:absolute;pointer-events:none;background:rgba(10,10,15,0.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(124,58,237,0.2);border-radius:10px;padding:8px 12px;font-size:12px;color:#fff;transition:opacity 0.15s;z-index:99;';
+                                    document.body.appendChild(el);
                                 }
+                                const tooltip = context.tooltip;
+                                if (tooltip.opacity === 0) { el.style.opacity = '0'; return; }
+                                let title = '';
+                                if (tooltip.dataPoints && tooltip.dataPoints.length) {
+                                    const idx = tooltip.dataPoints[0].dataIndex;
+                                    if (isDaily) {
+                                        const d = new Date(startDate);
+                                        d.setHours(0,0,0,0);
+                                        d.setDate(d.getDate() + idx);
+                                        title = `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}`;
+                                    } else {
+                                        title = labelKeys[idx] || tooltip.title[0] || '';
+                                    }
+                                }
+                                let body = tooltip.dataPoints.map(p => `<div style="color:rgba(255,255,255,0.6);margin-top:3px">${p.dataset.label} ${p.parsed.y.toLocaleString()}</div>`).join('');
+                                el.innerHTML = `<div style="font-weight:600;font-size:13px;margin-bottom:2px">${title}</div>${body}`;
+                                el.style.opacity = '1';
+                                const pos = context.chart.canvas.getBoundingClientRect();
+                                el.style.left = pos.left + window.scrollX + tooltip.caretX + 'px';
+                                el.style.top = pos.top + window.scrollY + tooltip.caretY - el.offsetHeight - 8 + 'px';
                             }
                         }
                     },
@@ -2447,56 +2532,72 @@
                 listFilterType = 'all';
                 document.getElementById('label-type').innerText = t('all_types');
             }
-            
             listFilterCat = 'all';
             document.getElementById('label-cat').innerText = t('all_cats');
             renderTransactionList();
         }
 
         function openFilterCatModal() {
-            const modal = document.getElementById('filter-cat-modal');
-            const list = document.getElementById('filter-cat-list');
-            list.innerHTML = `<div onclick="selectFilterCat('all', '${t('all_cats')}')" class="p-3 bg-white/5 rounded-[12px] border border-white/5 text-white mb-2 cursor-pointer flex items-center justify-between"><span class="text-sm">${t('all_cats')}</span>${listFilterCat === 'all' ? '<i data-lucide="check" class="w-4 h-4 text-cyber-purple"></i>' : ''}</div>`;
-
-            const cats = listFilterType === 'income' ? INCOME_CATS : (listFilterType === 'expense' ? EXPENSE_CATS : {...EXPENSE_CATS, ...INCOME_CATS});
-
-            for(let k in cats) {
-                const isSelected = listFilterCat === k;
-                const catName = t('cat_' + k) || cats[k].label;
-                list.innerHTML += `
-                    <div onclick="selectFilterCat('${k}', '${catName}')" class="p-3 bg-white/5 rounded-[12px] border ${isSelected ? 'border-cyber-purple bg-cyber-purple/10' : 'border-white/5'} flex items-center justify-between cursor-pointer hover:bg-white/10 transition-colors">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center bg-black/40" style="color:${cats[k].color}">
-                                <i data-lucide="${cats[k].icon||'tag'}" class="w-4 h-4"></i>
-                            </div>
-                            <span class="text-white text-sm">${catName}</span>
-                        </div>
-                        ${isSelected ? '<i data-lucide="check" class="w-4 h-4 text-cyber-purple"></i>' : ''}
-                    </div>
-                `;
-            }
-            lucide.createIcons();
-            modal.classList.remove('hidden');
+            tempFilterCats = listFilterCat === 'all' ? [] : [...listFilterCat];
+            renderFilterCatGrid();
+            document.getElementById('filter-cat-modal').classList.remove('hidden');
         }
+        function renderFilterCatGrid() {
+            const list = document.getElementById('filter-cat-list');
+            const cats = listFilterType === 'income' ? INCOME_CATS : (listFilterType === 'expense' ? EXPENSE_CATS : {...EXPENSE_CATS, ...INCOME_CATS});
+            const isAll = tempFilterCats.length === 0;
 
-        function closeFilterCatModal() { document.getElementById('filter-cat-modal').classList.add('hidden'); }
-
-        function selectFilterCat(key, label) {
-            listFilterCat = key;
-            document.getElementById('label-cat').innerText = label;
+            let html = `<div class="grid grid-cols-4 gap-x-2 gap-y-4">`;
+            html += `<div onclick="toggleFilterCat('all')" class="flex flex-col items-center gap-2 py-2 cursor-pointer">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center ${isAll ? 'bg-[#7c3aed]' : 'bg-white/5'}" style="color:#fff">
+                    <i data-lucide="layers" class="w-6 h-6"></i>
+                </div>
+                <span class="text-[14px] ${isAll ? 'text-white font-bold' : 'text-white/40'}">${t('all')}</span>
+            </div>`;
+            for(let k in cats) {
+                const isSelected = tempFilterCats.includes(k);
+                const catName = t('cat_' + k) || cats[k].label;
+                html += `<div onclick="toggleFilterCat('${k}')" class="flex flex-col items-center gap-2 py-2 cursor-pointer">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center ${isSelected ? 'bg-[#7c3aed]' : 'bg-white/5'}" style="color:${isSelected ? '#fff' : cats[k].color}">
+                        <i data-lucide="${cats[k].icon||'tag'}" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-[14px] ${isSelected ? 'text-white font-bold' : 'text-white/40'}">${catName}</span>
+                </div>`;
+            }
+            html += `</div>`;
+            list.innerHTML = html;
+            lucide.createIcons();
+        }
+        function toggleFilterCat(key) {
+            if (key === 'all') {
+                tempFilterCats = [];
+            } else {
+                const idx = tempFilterCats.indexOf(key);
+                if (idx > -1) tempFilterCats.splice(idx, 1);
+                else tempFilterCats.push(key);
+            }
+            renderFilterCatGrid();
+        }
+        function confirmFilterCat() {
+            if (tempFilterCats.length === 0) {
+                listFilterCat = 'all';
+                document.getElementById('label-cat').innerText = t('all_cats');
+            } else if (tempFilterCats.length === 1) {
+                listFilterCat = [...tempFilterCats];
+                const cats = {...EXPENSE_CATS, ...INCOME_CATS};
+                document.getElementById('label-cat').innerText = t('cat_' + tempFilterCats[0]) || cats[tempFilterCats[0]]?.label || '';
+            } else {
+                listFilterCat = [...tempFilterCats];
+                document.getElementById('label-cat').innerText = tempFilterCats.length + t('cat_label');
+            }
             closeFilterCatModal();
             renderTransactionList();
         }
 
+        function closeFilterCatModal() { document.getElementById('filter-cat-modal').classList.add('hidden'); }
+
         // --- Speech ---
         function initSpeech() {
-            if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-                if (!usesFallbackSpeech() && !localStorage.getItem('gemini_api_key')) {
-                    const micBtn = document.getElementById('mic-btn');
-                    if (micBtn) micBtn.style.display = 'none';
-                }
-                return;
-            }
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRecognition();
@@ -2505,25 +2606,13 @@
                 recognition.continuous = false;
                 recognition.interimResults = true;
 
-                recognition.onstart = function() {
-                    isListening = true;
-                    const btn = document.getElementById('mic-btn');
-                    btn.classList.add('mic-active');
-                    document.getElementById('chat-input').placeholder = t('input_placeholder');
-                };
-
                 recognition.onend = function() {
                     isListening = false;
-                    const btn = document.getElementById('mic-btn');
-                    btn.classList.remove('mic-active');
+                    if (!isRecordingFallback) {
+                        const btn = document.getElementById('mic-btn');
+                        btn.classList.remove('mic-active');
+                    }
                     document.getElementById('chat-input').placeholder = t('input_placeholder');
-                };
-
-                recognition.onerror = function(event) {
-                    isListening = false;
-                    const btn = document.getElementById('mic-btn');
-                    btn.classList.remove('mic-active');
-                    console.error("Speech Recognition Error: ", event.error);
                 };
 
                 recognition.onresult = function(event) {
@@ -2534,7 +2623,6 @@
                         }
                     }
                     if (finalTranscript) {
-                        // Auto-switch to chat page if not already there
                         if (document.getElementById('page-chat').classList.contains('hidden')) {
                             switchTab('chat');
                         }
@@ -2551,32 +2639,55 @@
         }
 
         function toggleSpeech() {
-            if (usesFallbackSpeech()) {
-                if (isRecordingFallback) {
-                    stopFallbackRecording();
-                } else {
-                    startFallbackRecording();
-                }
+            if (isRecordingFallback) {
+                stopFallbackRecording();
                 return;
             }
-            if (!recognition) {
-                showToast(currentLang==='zh'?'浏览器不支持语音':currentLang==='ja'?'音声認識非対応':currentLang==='ko'?'음성인식 미지원':'Speech not supported', 'error');
+            if (isListening) {
+                if (recognition) recognition.stop();
                 return;
             }
-            try {
-                if (isListening) {
-                    recognition.stop();
-                } else {
+            if (recognition) {
+                let speechStarted = false;
+                let fallbackTimer = null;
+                recognition.onstart = function() {
+                    speechStarted = true;
+                    if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+                    isListening = true;
+                    const btn = document.getElementById('mic-btn');
+                    btn.classList.add('mic-active');
+                    document.getElementById('chat-input').placeholder = t('input_placeholder');
+                };
+                recognition.onerror = function(event) {
+                    if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+                    isListening = false;
+                    const btn = document.getElementById('mic-btn');
+                    btn.classList.remove('mic-active');
+                    if (event.error === 'not-allowed' || event.error === 'service-not-available' || event.error === 'network') {
+                        startFallbackRecording();
+                    } else {
+                        startFallbackRecording();
+                    }
+                };
+                try {
                     recognition.start();
-                }
-            } catch(e) {
-                isListening = false;
-                document.getElementById('mic-btn').classList.remove('mic-active');
-                if (usesFallbackSpeech() || localStorage.getItem('gemini_api_key')) {
+                    if (usesFallbackSpeech()) {
+                        fallbackTimer = setTimeout(() => {
+                            if (!speechStarted) {
+                                recognition.onend = null;
+                                try { recognition.abort(); } catch(e) {}
+                                isListening = false;
+                                startFallbackRecording();
+                            }
+                        }, 1500);
+                    }
+                } catch(e) {
+                    isListening = false;
+                    document.getElementById('mic-btn').classList.remove('mic-active');
                     startFallbackRecording();
-                } else {
-                    showToast(currentLang==='zh'?'语音启动失败，请在设置中配置API Key':currentLang==='ja'?'音声認識を開始できません':currentLang==='ko'?'음성 시작 실패':'Speech failed, set API Key in settings', 'error');
                 }
+            } else {
+                startFallbackRecording();
             }
         }
 
@@ -2621,32 +2732,54 @@
         async function startFallbackRecording() {
             const apiKey = localStorage.getItem('gemini_api_key');
             if (!apiKey) {
-                showToast(currentLang==='zh'?'请先在设置中配置语音API Key':'Please set API Key in settings', 'error');
-                openApiKeyPanel();
+                showToast(currentLang==='zh'?'语音需要配置Gemini API Key':'Speech requires Gemini API Key', 'error');
+                setTimeout(() => openApiKeyPanel(), 500);
+                return;
+            }
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showToast(currentLang==='zh'?'此设备不支持麦克风录制':'Microphone not supported', 'error');
                 return;
             }
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const mimeType = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' :
-                                 MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
-                mediaRecorder = new MediaRecorder(stream, { mimeType });
+                let mimeType = 'audio/mp4';
+                if (typeof MediaRecorder.isTypeSupported === 'function') {
+                    if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+                    else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) mimeType = 'audio/webm;codecs=opus';
+                    else if (MediaRecorder.isTypeSupported('audio/webm')) mimeType = 'audio/webm';
+                    else mimeType = '';
+                }
+                mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+                if (!mimeType) mimeType = mediaRecorder.mimeType || 'audio/mp4';
                 audioChunks = [];
                 isRecordingFallback = true;
 
                 const btn = document.getElementById('mic-btn');
                 btn.classList.add('mic-active');
+                showToast(currentLang==='zh'?'录音中...再点停止':'Recording... tap to stop');
 
-                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
                 mediaRecorder.onstop = async () => {
                     stream.getTracks().forEach(tr => tr.stop());
                     btn.classList.remove('mic-active');
                     isRecordingFallback = false;
+                    if (audioChunks.length === 0) {
+                        showToast(currentLang==='zh'?'未录到声音':'No audio captured', 'error');
+                        return;
+                    }
                     const audioBlob = new Blob(audioChunks, { type: mimeType });
+                    showToast(currentLang==='zh'?'识别中...':'Transcribing...');
                     await transcribeWithGemini(audioBlob, mimeType);
                 };
-                mediaRecorder.start();
+                mediaRecorder.onerror = (e) => {
+                    stream.getTracks().forEach(tr => tr.stop());
+                    btn.classList.remove('mic-active');
+                    isRecordingFallback = false;
+                    showToast(currentLang==='zh'?'录音出错':'Recording error', 'error');
+                };
+                mediaRecorder.start(1000);
             } catch(e) {
-                showToast(currentLang==='zh'?'麦克风访问失败':'Microphone access failed', 'error');
+                showToast(currentLang==='zh'?'麦克风访问失败，请在设置中允许麦克风权限':'Microphone access failed', 'error');
             }
         }
 
@@ -2658,41 +2791,48 @@
 
         async function transcribeWithGemini(blob, mimeType) {
             const apiKey = localStorage.getItem('gemini_api_key');
-            const reader = new FileReader();
-            reader.onload = async function() {
-                const base64 = reader.result.split(',')[1];
+            try {
+                const base64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = () => reject(new Error('read failed'));
+                    reader.readAsDataURL(blob);
+                });
                 const langMap = {zh:'zh-CN', en:'en-US', ja:'ja-JP', ko:'ko-KR'};
                 const lang = langMap[currentLang] || 'zh-CN';
-                try {
-                    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [
-                                { inlineData: { mimeType: mimeType, data: base64 } },
-                                { text: `Transcribe this audio to text. Language: ${lang}. Return ONLY the transcribed text, nothing else.` }
-                            ]}]
-                        })
-                    });
-                    const data = await resp.json();
-                    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-                    if (text) {
-                        if (document.getElementById('page-chat').classList.contains('hidden')) switchTab('chat');
-                        addVoiceBubble(text);
-                        const box = document.getElementById('chat-box');
-                        setTimeout(() => {
-                            const aiRes = processAI(text);
-                            box.innerHTML += `<div class="flex justify-start mb-4"><div class="glass-card text-white/90 px-4 py-3 rounded-[24px] rounded-tl-sm text-sm border border-white/10 shadow-lg">${aiRes}<div class="text-[9px] text-white/25 mt-1">${chatTime()}</div></div></div>`;
-                            box.scrollTop = box.scrollHeight;
-                        }, 800);
-                    } else {
-                        showToast(currentLang==='zh'?'未识别到语音':'No speech detected', 'error');
-                    }
-                } catch(e) {
-                    showToast(currentLang==='zh'?'语音识别失败，请检查API Key':'Transcription failed', 'error');
+                const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [
+                            { inlineData: { mimeType: mimeType, data: base64 } },
+                            { text: `Transcribe this audio to text. Language: ${lang}. Return ONLY the transcribed text, nothing else.` }
+                        ]}]
+                    })
+                });
+                if (!resp.ok) {
+                    const errData = await resp.json().catch(() => ({}));
+                    const errMsg = errData?.error?.message || `HTTP ${resp.status}`;
+                    showToast(`识别失败: ${errMsg}`, 'error');
+                    return;
                 }
-            };
-            reader.readAsDataURL(blob);
+                const data = await resp.json();
+                const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+                if (text) {
+                    if (document.getElementById('page-chat').classList.contains('hidden')) switchTab('chat');
+                    addVoiceBubble(text);
+                    const box = document.getElementById('chat-box');
+                    setTimeout(() => {
+                        const aiRes = processAI(text);
+                        box.innerHTML += `<div class="flex justify-start mb-4"><div class="glass-card text-white/90 px-4 py-3 rounded-[24px] rounded-tl-sm text-sm border border-white/10 shadow-lg">${aiRes}<div class="text-[9px] text-white/25 mt-1">${chatTime()}</div></div></div>`;
+                        box.scrollTop = box.scrollHeight;
+                    }, 800);
+                } else {
+                    showToast(currentLang==='zh'?'未识别到语音内容':'No speech detected', 'error');
+                }
+            } catch(e) {
+                showToast(currentLang==='zh'?`语音识别失败: ${e.message||'网络错误'}`:`Failed: ${e.message||'network error'}`, 'error');
+            }
         }
 
         function addVoiceBubble(text) {
@@ -2712,7 +2852,7 @@
                             </div>
                             <span class="text-xs font-num font-medium">${duration}"</span>
                         </div>
-                        <span class="text-[10px] text-white/35 pr-2">"${text}"</span>
+                        <span class="text-[10px] text-white/35 pr-2">"${escHtml(text)}"</span>
                     </div>
                 </div>
              `;
@@ -2788,6 +2928,11 @@
                 end = new Date(now.getFullYear(), now.getMonth(), now.getDate()-1, 23, 59, 59, 999);
                 label = "昨天"; matchedStr = "昨天";
             }
+            else if(text.includes("大前天")) {
+                start = new Date(now.getFullYear(), now.getMonth(), now.getDate()-3, 0, 0, 0, 0);
+                end = new Date(now.getFullYear(), now.getMonth(), now.getDate()-3, 23, 59, 59, 999);
+                label = "大前天"; matchedStr = "大前天";
+            }
             else if(text.includes("前天")) {
                 start = new Date(now.getFullYear(), now.getMonth(), now.getDate()-2, 0, 0, 0, 0);
                 end = new Date(now.getFullYear(), now.getMonth(), now.getDate()-2, 23, 59, 59, 999);
@@ -2848,17 +2993,42 @@
         }
 
         function parseCategoryForAI(text) {
+             // 1. Check learned category memory first
+             for (let keyword in catMemory) {
+                 if (text.includes(keyword)) {
+                     const catKey = catMemory[keyword];
+                     const catObj = EXPENSE_CATS[catKey] || INCOME_CATS[catKey];
+                     if (catObj) return { key: catKey, ...catObj };
+                 }
+             }
+             // 2. Exact category label match
              const allCats = {...EXPENSE_CATS, ...INCOME_CATS};
              for(let key in allCats) {
                 if(text.includes(allCats[key].label)) return { key, ...allCats[key] };
              }
-             if(['打车','滴滴','地铁','公交','加油','高铁','出租','骑车'].some(k=>text.includes(k))) return { key:'transport', ...EXPENSE_CATS['transport'] };
-             if(['吃饭','午餐','晚餐','早餐','外卖','奶茶','咖啡','火锅','烧烤','餐','餐饮','吃的','食物','美食','饭','肯德基','麦当劳','KFC','星巴克','瑞幸','海底捞','必胜客','达美乐','汉堡','披萨','寿司','拉面','米饭','面包','蛋糕','水果','零食','饮料','奶茶'].some(k=>text.includes(k))) return { key:'food', ...EXPENSE_CATS['food'] };
-             if(['买','购物','淘宝','京东','超市','商场'].some(k=>text.includes(k))) return { key:'shopping', ...EXPENSE_CATS['shopping'] };
-             if(['电影','游戏','KTV','酒吧','门票'].some(k=>text.includes(k))) return { key:'entertainment', ...EXPENSE_CATS['entertainment'] };
-             if(['水电','房租','物业','话费','网费','充值'].some(k=>text.includes(k))) return { key:'utilities', ...EXPENSE_CATS['utilities'] };
-             if(['手机','电脑','耳机','键盘','iPad','数码'].some(k=>text.includes(k))) return { key:'tech', ...EXPENSE_CATS['tech'] };
+             // 3. Brand/keyword database
+             const BRAND_MAP = {
+                 transport: ['打车','滴滴','地铁','公交','加油','高铁','出租','骑车','火车','飞机','高速','停车','过路费','ETC','共享单车','哈啰','青桔','美团单车','曹操','T3','花小猪','首汽','嘀嗒','货拉拉','顺风车','动车','机票','船票','轮渡','Uber'],
+                 food: ['吃饭','午餐','晚餐','早餐','夜宵','外卖','奶茶','咖啡','火锅','烧烤','餐','餐饮','饭','面','粉','粥','串','锅','披萨','寿司','汉堡','炸鸡','薯条','沙拉','牛排','拉面','饺子','包子','馒头','炒饭','盖饭','便当','三明治','热狗','鸡翅','烤肉','烤鱼','小龙虾','螺蛳粉','麻辣烫','冒菜','凉皮','肉夹馍','煎饼','烤串','奶盖','果茶','豆浆','馄饨','米线','酸辣粉','卤味','炸酱面','一点点','霸王茶姬','瑞幸','星巴克','蜜雪冰城','茶百道','喜茶','奈雪','库迪','古茗','沪上阿姨','书亦烧仙草','益禾堂','CoCo','鲜茶亮','乐乐茶','茶颜悦色','茶颜','Manner','Tims','Costa','太平洋咖啡','麦当劳','肯德基','必胜客','达美乐','汉堡王','德克士','华莱士','塔斯汀','萨莉亚','海底捞','西贝','呷哺呷哺','巴奴','小龙坎','大龙燚','谭鸭血','杨国福','张亮','觅姐','吉野家','食其家','味千','兰州拉面','沙县','黄焖鸡','美团外卖','饿了么','盒马','叮咚','朴朴','山姆','Costco','水果','零食','蛋糕','面包','甜点','饮料','酸奶','牛奶','啤酒','下午茶','宵夜','聚餐','请客','AA'],
+                 shopping: ['淘宝','京东','超市','商场','购物','拼多多','天猫','闲鱼','得物','唯品会','1688','小红书','抖音商城','快手','沃尔玛','永辉','大润发','物美','全家','711','便利蜂','罗森','优衣库','ZARA','H&M','Nike','Adidas','李宁','安踏','衣服','裤子','鞋','包','化妆品','护肤品','口红','香水','日用品','纸巾','洗衣液','牙膏'],
+                 entertainment: ['电影','游戏','KTV','酒吧','门票','演唱会','话剧','展览','密室','剧本杀','台球','网吧','Steam','Switch','PS5','Xbox','爱奇艺','优酷','腾讯视频','B站','Netflix','Spotify','网易云','QQ音乐','健身','游泳','瑜伽','球','羽毛球','篮球','足球','旅游','酒店','民宿','景区','迪士尼','环球影城','欢乐谷'],
+                 utilities: ['水电','电费','水费','燃气','房租','物业','话费','网费','充值','宽带','有线','暖气','快递','维修','保洁','洗衣','理发','美容','医院','看病','药','体检','保险','挂号','牙','配眼镜','学费','培训','课程','书','考试','证件','签证','罚款','税'],
+                 tech: ['手机','电脑','耳机','键盘','iPad','平板','显示器','鼠标','充电器','数据线','U盘','硬盘','相机','无人机','智能手表','Apple','华为','小米','OPPO','vivo','三星','联想','戴尔','MacBook','iPhone','AirPods']
+             };
+             for (let cat in BRAND_MAP) {
+                 if (BRAND_MAP[cat].some(k => text.includes(k))) return { key: cat, ...EXPENSE_CATS[cat] };
+             }
+             // 4. Verb-based inference
+             if (/^(吃|喝)(了|过|点|顿)?/.test(text) || /(吃了|喝了|吃过|喝过|吃的|喝的)/.test(text)) return { key: 'food', ...EXPENSE_CATS['food'] };
+             if (/^(打车|坐车|开车|骑车)/.test(text)) return { key: 'transport', ...EXPENSE_CATS['transport'] };
+             if (/^(买了?|逛)/.test(text) && !/(买菜|买饭|买奶茶)/.test(text)) return { key: 'shopping', ...EXPENSE_CATS['shopping'] };
              return null;
+        }
+
+        function learnCategory(desc, catKey) {
+            if (!desc || desc.length < 2 || desc.length > 8) return;
+            catMemory[desc] = catKey;
+            localStorage.setItem('cat_memory', JSON.stringify(catMemory));
         }
 
         // === Feature 3: Undo ===
@@ -3145,8 +3315,8 @@
         function processAI(text) {
             // === Feature 2: Handle pending confirmation ===
             if (pendingAction) {
-                const confirm = text.match(/^(确认|是|对|好|yes|ok|确定|行)$/i);
-                const cancel = text.match(/^(取消|不|算了|no|否|不要)$/i);
+                const confirm = text.match(/^(确认|是|对|好|yes|ok|确定|行|嗯)$/i);
+                const cancel = text.match(/^(取消|不|算了|no|否|不要|不是)$/i);
                 if (confirm) {
                     const pa = pendingAction;
                     pendingAction = null;
@@ -3157,12 +3327,73 @@
                         renderAll();
                         return ai('batch_deleted', pa.payload.length);
                     }
+                    if (pa.type === 'confirm-record') {
+                        return finishRecord(pa.payload);
+                    }
                     return ai('confirmed');
                 } else if (cancel) {
                     pendingAction = null;
                     return ai('cancelled');
                 } else {
-                    pendingAction = null; // Clear on other input
+                    pendingAction = null;
+                }
+            }
+
+            // === Context-aware follow-up corrections ===
+            if (lastAiTxId && !text.match(/\d/)) {
+                const lastTx = txs.find(tx => tx.id === lastAiTxId);
+                if (lastTx) {
+                    // Date correction: "不对是前天的" / "应该是昨天" / "改成今天"
+                    const dateCorr = text.match(/(不对|错了|应该|改成|改为|其实是?).*(今天|昨天|大前天|前天)/);
+                    if (dateCorr) {
+                        const now = new Date();
+                        let offset = 0;
+                        if (dateCorr[2] === '昨天') offset = -1;
+                        else if (dateCorr[2] === '前天') offset = -2;
+                        else if (dateCorr[2] === '大前天') offset = -3;
+                        const nd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset, 12, 0, 0);
+                        pushUndo('modify', {...lastTx});
+                        lastTx.date = nd.toISOString();
+                        renderAll();
+                        return `✅ 已改为${dateCorr[2]}`;
+                    }
+                    // Category correction: "是餐饮" / "分类改成交通" / "归到购物"
+                    const catCorr = text.match(/(是|分类|类型|归到|改成|改为|算)\s*(餐饮|交通|购物|数码|生活|娱乐|其他|工资|奖金|理财)/);
+                    if (catCorr) {
+                        const catLabel = catCorr[2];
+                        const allCats = {...EXPENSE_CATS, ...INCOME_CATS};
+                        for (let key in allCats) {
+                            if (allCats[key].label === catLabel) {
+                                pushUndo('modify', {...lastTx});
+                                lastTx.cat = key;
+                                if (lastTx.desc && lastTx.desc !== catLabel) learnCategory(lastTx.desc, key);
+                                renderAll();
+                                return `✅ 分类已改为${catLabel}`;
+                            }
+                        }
+                    }
+                }
+            }
+            // Amount/desc correction: "改成30" / "金额改成50" / "备注改成XX"
+            if (lastAiTxId) {
+                const lastTx = txs.find(tx => tx.id === lastAiTxId);
+                if (lastTx) {
+                    const amtCorr = text.match(/(?:金额|价格)?(?:改成|改为)\s*(\d+(\.\d+)?)/);
+                    if (amtCorr && !text.match(/(花|记|打车|吃|喝)/)) {
+                        pushUndo('modify', {...lastTx});
+                        lastTx.amount = parseFloat(amtCorr[1]);
+                        renderAll();
+                        return `✅ 金额已改为${amtCorr[1]}`;
+                    }
+                    const descCorr = text.match(/(?:备注|描述|名字)(?:改成|改为)\s*(.+)/);
+                    if (descCorr) {
+                        pushUndo('modify', {...lastTx});
+                        const newDesc = descCorr[1].trim();
+                        lastTx.desc = newDesc;
+                        learnCategory(newDesc, lastTx.cat);
+                        renderAll();
+                        return `✅ 备注已改为"${newDesc}"`;
+                    }
                 }
             }
 
@@ -3236,7 +3467,7 @@
             // === Feature 9: Shortcut usage ===
             if (shortcuts[text.trim()]) {
                 const sc = shortcuts[text.trim()];
-                const newTx = { id: Date.now(), date: new Date().toISOString(), desc: sc.desc, amount: sc.amount, cat: sc.cat, type: sc.type };
+                const newTx = { id: Date.now() + Math.floor(Math.random() * 10000), date: new Date().toISOString(), desc: sc.desc, amount: sc.amount, cat: sc.cat, type: sc.type };
                 txs.push(newTx);
                 pushUndo('add', {...newTx});
                 lastAiTxId = newTx.id;
@@ -3390,6 +3621,7 @@
                     if (fuzzyCat) {
                         pushUndo('modify', {...lastTx});
                         lastTx.cat = fuzzyCat.key;
+                        learnCategory(lastTx.desc, fuzzyCat.key);
                         renderAll();
                         return ai('modified_target', lastTx.desc, ai('cat_to', fuzzyCat.label));
                     }
@@ -3482,7 +3714,7 @@
                  const lastTx = lastAiTxId ? txs.find(t => t.id === lastAiTxId) : null;
                  if (!lastTx) return ai("no_last_tx");
 
-                 pushUndo('modify', {...lastTx});
+                 const lastTxSnapshot = {...lastTx};
                  let changes = [];
                  const nameMatch = text.match(/(?:变成|改成|换成|改为|改名)\s*(.+?)(?:\d|$)/);
                  const nameMatch2 = text.match(/(?:变成|改成|换成|改为|改名)\s*(.+)/);
@@ -3504,6 +3736,7 @@
                  }
 
                  if (changes.length === 0) return ai("specify_change");
+                 pushUndo('modify', lastTxSnapshot);
                  lastAiTxId = lastTx.id;
                  renderAll();
                  return ai('modified_last', changes.join(', '));
@@ -3557,6 +3790,7 @@
 
                  if (!targetTx) return ai("not_found_modify");
 
+                 const txSnapshot = {...targetTx};
                  let changes = [];
                  if (amountChange) {
                      targetTx.amount = parseFloat(amountChange[1]);
@@ -3574,7 +3808,6 @@
                      }
                  }
                  if (directCatNew && changes.length === 0) {
-                     pushUndo('modify', {...targetTx});
                      targetTx.cat = directCatNew.key;
                      changes.push(ai('cat_to', directCatNew.label));
                  }
@@ -3585,6 +3818,7 @@
                  }
 
                  if (changes.length === 0) return ai("specify_what");
+                 pushUndo('modify', txSnapshot);
 
                  lastAiTxId = targetTx.id;
                  renderAll();
@@ -3618,12 +3852,12 @@
 
                 const freqLabel = ai(freq === 'monthly' ? 'freq_monthly' : (freq === 'weekly' ? 'freq_weekly' : 'freq_daily'));
                 const rId = 'r_' + Date.now();
-                const newRecurring = { id: rId, freq, desc, amount, cat, type, day: new Date().getDate(), dayOfWeek: (new Date().getDay()||7) };
+                const newRecurring = { id: rId, freq, desc, amount, cat, type, day: new Date().getDate(), dayOfWeek: (new Date().getDay()||7), bookId: currentBook };
                 recurringTxs.push(newRecurring);
                 localStorage.setItem('recurringTxs', JSON.stringify(recurringTxs));
 
                 // Also add one immediately for this period
-                const newTx = { id: Date.now(), date: new Date().toISOString(), desc, amount, cat, type };
+                const newTx = { id: Date.now() + Math.floor(Math.random() * 10000), date: new Date().toISOString(), desc, amount, cat, type };
                 txs.push(newTx);
                 lastAiTxId = newTx.id;
                 renderAll();
@@ -3631,6 +3865,12 @@
             }
 
             if (amount > 0) {
+                // Smart confirmation for large amounts with uncertain category
+                if (amount >= 500 && !catInfo) {
+                    pendingAction = { type: 'confirm-record', payload: { timeInfo, text, cleanText, amountText, numMatch, amount, catInfo } };
+                    const confirmMsg = currentLang === 'zh' ? `确认记录 <span class="text-teal-neon font-num font-bold">${amount}</span> 元吗？（说"确认"继续，"取消"放弃）` : `Confirm recording <span class="text-teal-neon font-num font-bold">${amount}</span>? (say "yes" or "no")`;
+                    return confirmMsg;
+                }
                 return finishRecord({ timeInfo, text, cleanText, amountText, numMatch, amount, catInfo });
             }
 
@@ -3727,10 +3967,20 @@
 
             let desc = (amountText || '')
                 .replace(numMatch ? numMatch[0] : '', '')
-                .replace(/[零一二两三四五六七八九十百千万]+/, '')
-                .replace(/(花了|买了|for|spent|块钱|块|元|入账|吃了|喝了|充了|付了|交了|吧)/g, '')
+                .replace(/(花了|买了|for|spent|块钱|块|元|入账|充了|付了|交了|吧)/g, '')
                 .replace(/^(花|买|赚了|赚)\s*/, '')
+                .replace(/^(吃|喝)(了)?(个|杯|份|碗|瓶|顿|次)?\s*/, '')
+                .replace(/^在\s*/, '')
+                .replace(/^(给|跟|和)\s*/, '')
+                .replace(/(买了?|充了?|付了?|转了?|发了?)/g, '')
+                .replace(/(花了?|用了?|付了?|共|一共|总共|人均)\s*$/, '')
                 .trim();
+            if (!numMatch) desc = desc.replace(/[零一二两三四五六七八九十百千万]+[块元]?/, '');
+            // "在星巴克花了45" → extract location as desc
+            if (!desc && amountText) {
+                const locMatch = amountText.match(/在(.+?)(?:花|消费|用|付|吃|喝)/);
+                if (locMatch) desc = locMatch[1].trim();
+            }
 
             let cat = 'other';
             let type = 'expense';
@@ -3741,12 +3991,8 @@
             }
 
             if (cat === 'other') {
-                if(text.match(/(打车|滴滴|地铁|公交|加油|高铁|火车|飞机|出租)/)) { cat = 'transport'; if(!desc) desc = (text.match(/(打车|滴滴|地铁|公交|加油|高铁|火车|飞机|出租)/)||[])[0]; }
-                else if(text.match(/(吃饭|午餐|晚餐|早餐|外卖|奶茶|咖啡|火锅|烧烤|饭|餐)/)) { cat = 'food'; if(!desc) desc = (text.match(/(吃饭|午餐|晚餐|早餐|外卖|奶茶|咖啡|火锅|烧烤)/)||['餐饮'])[0]; }
-                else if(text.match(/(淘宝|京东|超市|商场|购物)/)) { cat = 'shopping'; if(!desc) desc = (text.match(/(淘宝|京东|超市|商场|购物)/)||['购物'])[0]; }
-                else if(text.match(/(电影|游戏|KTV|酒吧|门票)/)) { cat = 'entertainment'; if(!desc) desc = (text.match(/(电影|游戏|KTV|酒吧|门票)/)||['娱乐'])[0]; }
-                else if(text.match(/(水电|房租|物业|话费|网费|充值)/)) { cat = 'utilities'; if(!desc) desc = (text.match(/(水电|房租|物业|话费|网费|充值)/)||['生活'])[0]; }
-                else if(text.match(/(手机|电脑|耳机|键盘|iPad)/)) { cat = 'tech'; if(!desc) desc = (text.match(/(手机|电脑|耳机|键盘|iPad)/)||['数码'])[0]; }
+                const reCat = parseCategoryForAI(text);
+                if (reCat) { cat = reCat.key; if(!desc) desc = reCat.label; }
             }
 
             if (text.match(/(收入|赚了|入账|工资|奖金|理财)/)) {
@@ -3775,7 +4021,7 @@
                 }
             }
 
-            const newTx = { id: Date.now(), date: targetDate.toISOString(), desc, amount, cat, type };
+            const newTx = { id: Date.now() + Math.floor(Math.random() * 10000), date: targetDate.toISOString(), desc, amount, cat, type };
             txs.push(newTx);
             pushUndo('add', {...newTx});
             lastAiTxId = newTx.id;
@@ -3830,7 +4076,7 @@
             const txt = input.value.trim();
             if(!txt) return;
             const box = document.getElementById('chat-box');
-            box.innerHTML += `<div class="flex justify-end mb-4"><div class="bg-cyber-purple text-white px-4 py-3 rounded-[24px] rounded-tr-sm text-sm font-medium shadow-[0_0_15px_rgba(124,58,237,0.3)]">${txt}<div class="text-[9px] text-white/50 mt-1 text-right">${chatTime()}</div></div></div>`;
+            box.innerHTML += `<div class="flex justify-end mb-4"><div class="bg-cyber-purple text-white px-4 py-3 rounded-[24px] rounded-tr-sm text-sm font-medium shadow-[0_0_15px_rgba(124,58,237,0.3)]">${escHtml(txt)}<div class="text-[9px] text-white/50 mt-1 text-right">${chatTime()}</div></div></div>`;
             input.value = '';
             // Hide chips after first message
             const chips = document.getElementById('chat-quick-chips');
@@ -4001,16 +4247,14 @@
                 if (listFilterType !== 'all' && t.type !== listFilterType) return false;
 
                 // 3. Cat Filter
-                if (listFilterCat !== 'all' && t.cat !== listFilterCat) return false;
+                if (listFilterCat !== 'all' && !listFilterCat.includes(t.cat)) return false;
 
                 return true;
             });
             
             if (filtered.length === 0) {
                  list.innerHTML = `<div class="flex flex-col items-center justify-center py-16 gap-4">
-                    <div class="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                        <i data-lucide="inbox" class="w-8 h-8 text-white/20"></i>
-                    </div>
+                    <i data-lucide="inbox" class="w-10 h-10 text-white/20"></i>
                     <p class="text-white/35 text-sm">${t('no_records')}</p>
                     <button onclick="openNewTx()" class="px-4 py-2 rounded-full bg-cyber-purple/10 border border-cyber-purple/30 text-cyber-purple text-xs font-medium hover:bg-cyber-purple/20 transition-colors">
                         <i data-lucide="plus" class="w-3 h-3 inline-block mr-1"></i>${t('add_tx')}
@@ -4137,6 +4381,7 @@
             document.getElementById('date-filter-modal').classList.remove('hidden');
             setDateFilterMode('range');
             document.getElementById('date-filter-modal').dataset.statsMode = 'true';
+            initDatePicker();
         }
 
 
@@ -4172,23 +4417,34 @@
 
         function renderCategoryList() {
             const list = document.getElementById('category-list');
-            list.innerHTML = '';
             const cats = currentManageType === 'expense' ? EXPENSE_CATS : INCOME_CATS;
             const keys = Object.keys(cats);
             const sysKeys = currentManageType === 'expense' ? SYSTEM_EXPENSE_KEYS : SYSTEM_INCOME_KEYS;
-            
+
             document.getElementById('cat-limit-info').innerText = `${keys.length}/15`;
-            
-            keys.forEach(key => {
+
+            list.innerHTML = `<div class="grid grid-cols-4 gap-x-2 gap-y-4 py-2">${keys.map(key => {
                 const c = cats[key];
                 const isSystem = sysKeys.includes(key);
                 const catName = t('cat_' + key) || c.label;
-                const div = document.createElement('div');
-                div.className = 'flex items-center justify-between bg-white/5 p-3 rounded-[12px] border border-white/5';
-                div.innerHTML = `<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full flex items-center justify-center bg-black/40" style="color:${c.color}"><i data-lucide="${c.icon||'tag'}" class="w-4 h-4"></i></div><span class="text-sm text-white">${catName}</span></div>${!isSystem ? `<button onclick="removeCategory('${key}')" class="text-white/35 hover:text-red-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : `<div class="p-2 text-white/15"><i data-lucide="lock" class="w-3 h-3"></i></div>`}`;
-                list.appendChild(div);
-            });
+                return `<div class="flex flex-col items-center gap-2 relative group">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center bg-white/5" style="color:${c.color}">
+                        <i data-lucide="${c.icon||'tag'}" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-[14px] text-white truncate max-w-full">${catName}</span>
+                    ${!isSystem ? `<button onclick="event.stopPropagation();removeCategory('${key}')" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500/80 text-white flex items-center justify-center opacity-0 group-active:opacity-100 transition-opacity"><i data-lucide="x" class="w-3 h-3"></i></button>` : ''}
+                </div>`;
+            }).join('')}</div>`;
             lucide.createIcons();
+        }
+
+        function saveCustomCats() {
+            const customExp = {};
+            const customInc = {};
+            for (let k in EXPENSE_CATS) { if (!(k in DEFAULT_EXPENSE_CATS)) customExp[k] = EXPENSE_CATS[k]; }
+            for (let k in INCOME_CATS) { if (!(k in DEFAULT_INCOME_CATS)) customInc[k] = INCOME_CATS[k]; }
+            localStorage.setItem('custom_expense_cats', JSON.stringify(customExp));
+            localStorage.setItem('custom_income_cats', JSON.stringify(customInc));
         }
 
         function addNewCategory() {
@@ -4199,6 +4455,7 @@
             const id = 'custom_' + Date.now();
             const randomColor = PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)];
             cats[id] = { label: name, color: randomColor, icon: 'tag' };
+            saveCustomCats();
             document.getElementById('new-cat-name').value = '';
             renderCategoryList();
             showToast(`${t('added_cat')}「${name}」`);
@@ -4208,8 +4465,26 @@
             const cats = currentManageType === 'expense' ? EXPENSE_CATS : INCOME_CATS;
             const label = cats[key]?.label || '';
             delete cats[key];
+            saveCustomCats();
             renderCategoryList();
             showToast(`${t('removed_cat')}「${label}」`);
+        }
+
+        function evalAmount(expr) {
+            if (!expr || !expr.trim()) return NaN;
+            const clean = expr.replace(/\s/g,'').replace(/×/g,'*').replace(/÷/g,'/').replace(/，/g,'.').replace(/。/g,'.');
+            if (!/^[\d+\-*/.()]+$/.test(clean)) return NaN;
+            if (/[+\-*/.]{2,}/.test(clean.replace(/\(-/g,'(0-'))) return NaN;
+            try { const r = Function('"use strict";return(' + clean + ')')(); return typeof r === 'number' && isFinite(r) ? Math.round(r*100)/100 : NaN; } catch(e) { return NaN; }
+        }
+        function previewCalc() {
+            const input = document.getElementById('e-amount').value;
+            const preview = document.getElementById('calc-preview');
+            if (/[+\-*/]/.test(input) && input.length > 1) {
+                const result = evalAmount(input);
+                if (!isNaN(result) && result > 0) { preview.textContent = '= ' + result; preview.style.opacity = '1'; }
+                else { preview.style.opacity = '0'; }
+            } else { preview.style.opacity = '0'; }
         }
 
         function openNewTx() {
@@ -4243,24 +4518,39 @@
         }
         
         function populateCats(cats) {
-            const sel = document.getElementById('e-cat');
-            sel.innerHTML = '';
-            for(let k in cats) {
-                const opt = document.createElement('option');
-                opt.value = k;
-                opt.text = t('cat_' + k) || cats[k].label;
-                opt.style.background = '#121212';
-                sel.appendChild(opt);
-            }
+            const grid = document.getElementById('cat-grid');
+            const currentVal = document.getElementById('e-cat').value || Object.keys(cats)[0];
+            grid.innerHTML = Object.entries(cats).map(([k, v]) => `
+                <div onclick="selectCatGrid('${k}')" class="flex flex-col items-center gap-2 py-2 cursor-pointer" data-cat-key="${k}">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center transition-colors ${k === currentVal ? 'bg-[#7c3aed]' : 'bg-white/5'}" style="color:${k === currentVal ? '#fff' : v.color}">
+                        <i data-lucide="${v.icon}" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-[14px] transition-colors ${k === currentVal ? 'text-white font-bold' : 'text-white/40'}">${t('cat_' + k) || v.label}</span>
+                </div>
+            `).join('');
+            document.getElementById('e-cat').value = currentVal;
+            lucide.createIcons({attrs: {class: ''}, nameAttr: 'data-lucide'});
+        }
+        function selectCatGrid(key) {
+            document.getElementById('e-cat').value = key;
+            const cats = document.getElementById('btn-expense').classList.contains('text-white') ? EXPENSE_CATS : INCOME_CATS;
+            document.querySelectorAll('#cat-grid > div').forEach(el => {
+                const k = el.dataset.catKey;
+                const isActive = k === key;
+                const c = cats[k];
+                el.querySelector('div').className = `w-12 h-12 rounded-full flex items-center justify-center transition-colors ${isActive ? 'bg-[#7c3aed]' : 'bg-white/5'}`;
+                el.querySelector('div').style.color = isActive ? '#fff' : (c ? c.color : '');
+                el.querySelector('span').className = `text-[14px] transition-colors ${isActive ? 'text-white font-bold' : 'text-white/40'}`;
+            });
         }
 
         function saveTx(e) {
             e.preventDefault();
-            const amountVal = parseFloat(document.getElementById('e-amount').value);
-            if (!amountVal || amountVal <= 0) { showToast(t('enter_amount'), 'error'); return; }
+            const amountVal = evalAmount(document.getElementById('e-amount').value);
+            if (!amountVal || isNaN(amountVal) || amountVal <= 0) { showToast(t('enter_amount'), 'error'); return; }
             const descVal = document.getElementById('e-desc').value.trim();
             const idVal = document.getElementById('e-id').value;
-            const id = idVal ? parseInt(idVal) : Date.now();
+            const id = idVal ? Number(idVal) : Date.now() + Math.floor(Math.random() * 10000);
             const type = document.getElementById('btn-expense').classList.contains('text-white') ? 'expense' : 'income';
             const isEdit = !!idVal;
             const newTx = {
@@ -4279,7 +4569,7 @@
         }
 
         function deleteTxFromModal() {
-            const id = parseInt(document.getElementById('e-id').value);
+            const id = Number(document.getElementById('e-id').value);
             const tx = txs.find(x => x.id === id);
             if (tx) pushUndo('delete', {...tx});
             txs = txs.filter(x => x.id !== id);
@@ -4297,7 +4587,7 @@
             document.getElementById('e-desc').value = tx.desc;
             document.getElementById('e-time').value = new Date(new Date(tx.date) - new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
             setType(tx.type || 'expense');
-            document.getElementById('e-cat').value = tx.cat;
+            selectCatGrid(tx.cat);
             document.getElementById('btn-delete').classList.remove('hidden');
             document.getElementById('edit-modal').classList.remove('hidden');
         }
@@ -4308,15 +4598,16 @@
 
         // PWA: Register service worker for offline support
         if ('serviceWorker' in navigator) {
+            const APP_VERSION = '2.1.0';
             const swCode = `
-                const CACHE = 'nf-v1';
-                const ASSETS = ['./', self.location.href];
-                self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())));
-                self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+                const CACHE = 'nf-v${APP_VERSION}';
+                self.addEventListener('install', e => { self.skipWaiting(); });
+                self.addEventListener('activate', e => e.waitUntil(
+                    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())
+                ));
                 self.addEventListener('fetch', e => {
                     e.respondWith(fetch(e.request).then(r => {
-                        const clone = r.clone();
-                        caches.open(CACHE).then(c => c.put(e.request, clone));
+                        if (r.ok) { const clone = r.clone(); caches.open(CACHE).then(c => c.put(e.request, clone)); }
                         return r;
                     }).catch(() => caches.match(e.request)));
                 });
