@@ -657,7 +657,13 @@
                             <img id="card-avatar" class="w-full h-full object-cover" src="">
                         </div>
                         <div>
-                            <p id="card-username" class="text-[17px] font-normal text-white">Master</p>
+                            <div class="flex items-center gap-1.5">
+                                <p id="card-username" class="text-[17px] font-normal text-white">Master</p>
+                                <div id="streak-fire" onclick="openLevelPanel()" class="flex items-center gap-0.5 active:scale-90 transition-transform cursor-pointer">
+                                    <i data-lucide="flame" class="w-[14px] h-[14px]" style="color:#f97316;fill:#fb923c;"></i>
+                                    <span id="streak-count" class="text-[12px] font-medium text-orange-400 font-num">0</span>
+                                </div>
+                            </div>
                             <p id="greeting-text" class="text-[11px] text-white/30 mt-0.5">Good Morning</p>
                         </div>
                     </div>
@@ -667,7 +673,7 @@
                 </div>
 
                 <!-- Amount block -->
-                <div class="relative z-10 text-center mb-8">
+                <div class="relative z-10 text-center mt-6 mb-2">
                     <p id="card-period-label" class="text-[14px] text-white/40 tracking-wide" data-i18n="month_expense">本月支出</p>
                     <div class="flex items-baseline justify-center">
                         <h2 id="display-main-expense" class="text-[40px] font-medium text-white font-num tracking-tight">0.00</h2>
@@ -676,7 +682,7 @@
                         </button>
                     </div>
                     <div id="expense-trend-badge" class="flex justify-center"></div>
-                    <p class="text-[14px] text-white/30 font-num tracking-wide mt-1">
+                    <p id="net-income-row" class="text-[14px] text-white/30 font-num tracking-wide mt-1 hidden">
                         <span data-i18n="net">净收支</span> <span id="display-total-assets" class="text-white">0.00</span>
                         <span class="mx-2.5 text-white/10">·</span>
                         <span id="card-income-label" data-i18n="month_income">收入</span> <span id="display-monthly-income" class="text-white">0.00</span>
@@ -684,7 +690,7 @@
                 </div>
 
                 <!-- Bottom buttons -->
-                <div class="relative z-10 flex gap-3">
+                <div class="relative z-10 flex gap-3 mt-6">
                     <button onclick="openBudgetModal()" class="relative flex-1 flex items-center justify-center gap-2.5 py-[14px] rounded-full overflow-hidden backdrop-blur-xl active:scale-[0.96] transition-transform" style="background: linear-gradient(90deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.18) 100%);">
                         <i data-lucide="wallet" class="w-[20px] h-[20px] text-white/80"></i>
                         <span class="text-[16px] font-normal text-white" data-i18n="budget_btn">预算设置</span>
@@ -696,6 +702,8 @@
                 </div>
                             </div>
 
+            <!-- Budget Reminder -->
+            <div id="home-budget-reminder" class="mb-4 hidden"></div>
 
             <div>
                 <div class="mb-0">
@@ -793,6 +801,9 @@
                 </div>
                 <div class="flex items-center justify-center mt-3" onclick="editProfileName()">
                     <h2 id="profile-name" class="text-[20px] font-medium text-white tracking-tight">Master</h2>
+                </div>
+                <div class="flex justify-center mt-2">
+                    <div id="profile-level-badge" onclick="openLevelPanel()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[14px] font-normal text-white/80 active:scale-95 transition-transform cursor-pointer" style="background:linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(88,28,195,0.15) 40%, rgba(59,130,246,0.18) 100%);backdrop-filter:blur(12px);box-shadow:0 4px 20px -4px rgba(124,58,237,0.25), inset 0 1px 0 rgba(255,255,255,0.06)"></div>
                 </div>
             </div>
 
@@ -1264,6 +1275,21 @@
         </div>
     </div>
 
+    <!-- Level Panel -->
+    <div id="level-panel-modal" class="fixed inset-0 z-[72] hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeLevelPanel()"></div>
+        <div class="absolute bottom-0 w-full bg-[#0a0a0c] rounded-t-[32px] border-t border-white/10 animate-slide-up shadow-2xl max-h-[80vh] overflow-y-auto pb-safe">
+            <div class="w-full max-w-lg mx-auto p-6">
+                <div class="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5"></div>
+                <div class="flex justify-between items-center mb-5">
+                    <h3 class="text-lg font-semibold text-white tracking-tight" data-i18n="level_title">等级轨迹</h3>
+                    <button onclick="closeLevelPanel()" class="flex items-center justify-center"><i data-lucide="x" class="w-5 h-5 text-gray-600"></i></button>
+                </div>
+                <div id="level-panel-content"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Voice Overlay -->
     <div id="voice-overlay" onclick="toggleSpeech()">
         <div class="voice-orb-wrap">
@@ -1383,6 +1409,192 @@
         let shortcuts = JSON.parse(localStorage.getItem('shortcuts') || '{}'); // {keyword: {amount, cat, type, desc}}
         let recurringTxs = JSON.parse(localStorage.getItem('recurringTxs') || '[]');
 
+        // === Level System ===
+        const LEVELS = [
+            { title: '无意识消费体', desc: '钱去哪了？不知道', minDays: 0, minTx: 0, budgetHits: 0 },
+            { title: '初级观察者', desc: '至少开始看了', minDays: 0, minTx: 10, budgetHits: 0 },
+            { title: '消费解构师', desc: '知道钱花在哪了', minDays: 7, minTx: 20, budgetHits: 0 },
+            { title: '预算博弈家', desc: '开始跟欲望谈判', minDays: 14, minTx: 40, budgetHits: 1 },
+            { title: '延迟满足型人格', desc: '能忍住不买了', minDays: 30, minTx: 80, budgetHits: 2 },
+            { title: '资产编译器', desc: '钱开始听你的话', minDays: 60, minTx: 150, budgetHits: 3 },
+            { title: '财务主权者', desc: '你拥有你的生活', minDays: 90, minTx: 250, budgetHits: 5 },
+        ];
+        function lvlTitle(i) { const names = t('level_names'); return (names && names[i]) || LEVELS[i].title; }
+        function lvlDesc(i) { const descs = t('level_descs'); return (descs && descs[i]) || LEVELS[i].desc; }
+        function achTitle(id) { const names = t('ach_names'); return (names && names[id]) || ACHIEVEMENTS.find(a=>a.id===id)?.title || id; }
+        function achDesc(id) { const descs = t('ach_descs'); return (descs && descs[id]) || ACHIEVEMENTS.find(a=>a.id===id)?.desc || ''; }
+        function getComebackMsgs() {
+            return t('comeback_msgs') || ['欢迎回来。你的钱没等你，但我等了','失踪人口回归！这几天花的钱，它们不会自己记的你知道吧','回来就好。你不在的时候，余额哭了好几次'];
+        }
+
+        function getLevelData() {
+            const data = JSON.parse(localStorage.getItem('level_data') || 'null') || {
+                streak: 0, maxStreak: 0, totalTx: 0, budgetHits: 0, lastActiveDate: null, level: 0, xp: 0
+            };
+            return data;
+        }
+        function saveLevelData(d) { localStorage.setItem('level_data', JSON.stringify(d)); }
+
+        function checkStreak() {
+            const d = getLevelData();
+            const today = new Date().toISOString().slice(0, 10);
+            if (d.lastActiveDate === today) return d;
+            const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+            if (d.lastActiveDate === yesterday) {
+                d.streak++;
+            } else if (d.lastActiveDate && d.lastActiveDate !== today) {
+                const gap = Math.floor((Date.now() - new Date(d.lastActiveDate).getTime()) / 86400000);
+                if (gap >= 7 && d.level > 0) d.level = Math.max(0, d.level - 1);
+                d.streak = 1;
+                d._comeback = true;
+            } else {
+                d.streak = 1;
+            }
+            if (d.streak > d.maxStreak) d.maxStreak = d.streak;
+            d.lastActiveDate = today;
+            saveLevelData(d);
+            return d;
+        }
+
+        function addLevelXP(action) {
+            const d = getLevelData();
+            const xpMap = { record: 10, voice: 15, streak_bonus: 5, budget_hit: 100 };
+            d.xp += xpMap[action] || 0;
+            if (action === 'record') d.totalTx++;
+            if (action === 'budget_hit') d.budgetHits++;
+            // Check level up
+            let newLevel = d.level;
+            for (let i = LEVELS.length - 1; i >= 0; i--) {
+                const req = LEVELS[i];
+                if (d.maxStreak >= req.minDays && d.totalTx >= req.minTx && d.budgetHits >= req.budgetHits) {
+                    newLevel = i; break;
+                }
+            }
+            const leveledUp = newLevel > d.level;
+            d.level = newLevel;
+            saveLevelData(d);
+            return { leveledUp, level: newLevel, title: lvlTitle(newLevel) };
+        }
+
+        function renderLevelBadge() {
+            const d = getLevelData();
+            const el = document.getElementById('greeting-text');
+            if (!el) return;
+            const lvl = LEVELS[d.level] || LEVELS[0];
+            const h = new Date().getHours();
+            const key = h < 12 ? 'greeting_morning' : h < 18 ? 'greeting_afternoon' : 'greeting_evening';
+            el.textContent = `${t(key)} · ${lvlTitle(d.level)}`;
+        }
+
+        // === Hidden Achievements ===
+        const ACHIEVEMENTS = [
+            { id: 'night_owl', icon: '🦉', title: '凌晨经济学家', desc: '凌晨2-5点记了一笔账', check: (ctx) => { const h = new Date().getHours(); return ctx.action === 'record' && h >= 2 && h < 5; }},
+            { id: 'big_day', icon: '💰', title: '日入斗金', desc: '单笔收入超过10,000', check: (ctx) => ctx.action === 'record' && ctx.type === 'income' && ctx.amount >= 10000 },
+            { id: 'zero_spend', icon: '🧘', title: '断舍离', desc: '连续7天零支出', check: (ctx) => { if (ctx.action !== 'daily_check') return false; const now = new Date(); for (let i = 0; i < 7; i++) { const d = new Date(now); d.setDate(d.getDate()-i); const ds = d.toISOString().slice(0,10); if (txs.some(t => t.type==='expense' && t.date.slice(0,10)===ds)) return false; } return true; }},
+            { id: 'all_round', icon: '🎯', title: '精确制导', desc: '月预算使用率在95%-105%之间', check: (ctx) => { if (ctx.action !== 'month_end' || totalBudget <= 0) return false; const now = new Date(); const ms = new Date(now.getFullYear(),now.getMonth(),1); const spent = txs.filter(t=>t.type==='expense'&&new Date(t.date)>=ms).reduce((s,t)=>s+t.amount,0); const pct = spent/totalBudget*100; return pct >= 95 && pct <= 105; }},
+            { id: 'round_lover', icon: '🔵', title: '强迫症确诊', desc: '连续20笔金额全是整数', check: (ctx) => { if (ctx.action !== 'record') return false; const recent = txs.slice(-20); return recent.length >= 20 && recent.every(t => t.amount === Math.floor(t.amount)); }},
+            { id: 'early_bird', icon: '⏰', title: '时间管理大师', desc: '连续7天在同一小时内记账', check: (ctx) => { if (ctx.action !== 'record') return false; const days = {}; txs.forEach(t => { const d = t.date.slice(0,10); if (!days[d]) days[d] = new Date(t.date).getHours(); }); const keys = Object.keys(days).sort().slice(-7); if (keys.length < 7) return false; const h0 = days[keys[0]]; return keys.every(k => Math.abs(days[k]-h0) <= 1); }},
+            { id: 'speed_run', icon: '⚡', title: '闪电记账', desc: '一分钟内记了3笔', check: (ctx) => { if (ctx.action !== 'record') return false; const now = Date.now(); const recent = txs.filter(t => now - new Date(t.date).getTime() < 60000); return recent.length >= 3; }},
+            { id: 'archaeologist', icon: '🏺', title: '考古学家', desc: '记录了30天前的消费', check: (ctx) => { if (ctx.action !== 'record' || !ctx.date) return false; return (Date.now() - new Date(ctx.date).getTime()) > 30*86400000; }},
+            { id: 'cat_king', icon: '👑', title: '品类王者', desc: '某分类连续30天都有消费', check: (ctx) => { if (ctx.action !== 'record') return false; const cats = {}; txs.filter(t=>t.type==='expense').forEach(t=>{ const d=t.date.slice(0,10); if(!cats[t.cat]) cats[t.cat]=new Set(); cats[t.cat].add(d); }); const now=new Date(); for(let c in cats){ let streak=0; for(let i=0;i<30;i++){ const d=new Date(now); d.setDate(d.getDate()-i); if(cats[c].has(d.toISOString().slice(0,10))) streak++; else break; } if(streak>=30) return true; } return false; }},
+            { id: 'centurion', icon: '💯', title: '百笔斩', desc: '累计记账100笔', check: (ctx) => ctx.action === 'record' && txs.length >= 100 },
+        ];
+
+        function getUnlockedAchievements() {
+            return JSON.parse(localStorage.getItem('achievements') || '[]');
+        }
+        function saveAchievement(id) {
+            const list = getUnlockedAchievements();
+            if (!list.includes(id)) { list.push(id); localStorage.setItem('achievements', JSON.stringify(list)); }
+        }
+
+        function checkAchievements(ctx) {
+            const unlocked = getUnlockedAchievements();
+            for (const ach of ACHIEVEMENTS) {
+                if (unlocked.includes(ach.id)) continue;
+                try {
+                    if (ach.check(ctx)) {
+                        saveAchievement(ach.id);
+                        showAchievementPopup(ach);
+                    }
+                } catch(e) {}
+            }
+        }
+
+        function showAchievementPopup(ach) {
+            const el = document.createElement('div');
+            el.className = 'fixed inset-0 z-[200] flex items-center justify-center';
+            el.style.background = 'rgba(0,0,0,0.5)';
+            el.innerHTML = `<div class="relative bg-[#0a0a0c]/95 border border-white/10 backdrop-blur-2xl rounded-[28px] p-8 text-center shadow-2xl animate-fade-in max-w-[280px]">
+                <button onclick="this.parentElement.parentElement.remove()" class="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-white/[0.06] text-white/40 active:scale-90 transition-transform">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <div class="text-[48px] mb-3">${ach.icon}</div>
+                <div class="text-[10px] text-cyber-purple uppercase tracking-widest mb-1">${t('level_achievement_unlock')}</div>
+                <div class="text-[18px] font-semibold text-white mb-2">「${achTitle(ach.id)}」</div>
+                <div class="text-[13px] text-white/50">${achDesc(ach.id)}</div>
+            </div>`;
+            document.body.appendChild(el);
+        }
+
+        function openLevelPanel() {
+            const d = getLevelData();
+            const unlocked = getUnlockedAchievements();
+            const el = document.getElementById('level-panel-content');
+
+            const levelHtml = LEVELS.map((lvl, i) => {
+                const isCurrent = i === d.level;
+                const isLocked = i > d.level;
+                return `<div class="flex items-start gap-3 ${i < LEVELS.length - 1 ? 'pb-4' : ''}">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-medium ${isCurrent ? 'bg-[#7c3aed] text-white' : isLocked ? 'bg-white/5 text-white/20' : 'bg-white/10 text-white/60'}">
+                            ${i}
+                        </div>
+                        ${i < LEVELS.length - 1 ? `<div class="w-[1px] h-full min-h-[24px] ${isLocked ? 'bg-white/5' : 'bg-[#7c3aed]/40'}"></div>` : ''}
+                    </div>
+                    <div class="flex-1 pt-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[14px] ${isCurrent ? 'text-white' : isLocked ? 'text-white/25' : 'text-white/60'}">${lvlTitle(i)}</span>
+                            ${isCurrent ? `<span class="text-[10px] text-[#7c3aed] bg-[#7c3aed]/10 px-1.5 py-0.5 rounded-full">${t('level_current')}</span>` : ''}
+                        </div>
+                        <p class="text-[11px] ${isLocked ? 'text-white/15' : 'text-white/35'} mt-0.5">${lvlDesc(i)}</p>
+                        ${isLocked ? `<p class="text-[10px] text-white/20 mt-0.5">${t('level_req')(lvl.minDays, lvl.minTx, lvl.budgetHits)}</p>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+
+            const statsHtml = `<div class="grid grid-cols-3 gap-2 mb-6">
+                <div class="bg-white/[0.03] rounded-2xl p-3 text-center">
+                    <div class="text-[18px] text-white font-medium font-num">${d.streak}</div>
+                    <div class="text-[10px] text-white/35 mt-0.5">${t('level_streak')}</div>
+                </div>
+                <div class="bg-white/[0.03] rounded-2xl p-3 text-center">
+                    <div class="text-[18px] text-white font-medium font-num">${d.totalTx}</div>
+                    <div class="text-[10px] text-white/35 mt-0.5">${t('level_total_tx')}</div>
+                </div>
+                <div class="bg-white/[0.03] rounded-2xl p-3 text-center">
+                    <div class="text-[18px] text-white font-medium font-num">${d.budgetHits}</div>
+                    <div class="text-[10px] text-white/35 mt-0.5">${t('level_budget_hits')}</div>
+                </div>
+            </div>`;
+
+            const achHtml = unlocked.length > 0 ? `<div class="mt-6 pt-4 border-t border-white/5">
+                <p class="text-[12px] text-white/40 mb-3">${t('level_achievements')}</p>
+                <div class="flex flex-wrap gap-2">${unlocked.map(id => {
+                    const a = ACHIEVEMENTS.find(x => x.id === id);
+                    return a ? `<div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/[0.03] text-[11px] text-white/60"><span>${a.icon}</span>${achTitle(a.id)}</div>` : '';
+                }).join('')}</div>
+            </div>` : '';
+
+            el.innerHTML = statsHtml + `<div class="mb-4"><p class="text-[12px] text-white/40 mb-3">${t('level_route')}</p>${levelHtml}</div>` + achHtml;
+            document.getElementById('level-panel-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeLevelPanel() {
+            document.getElementById('level-panel-modal').classList.add('hidden');
+        }
+
         // --- i18n ---
         let currentLang = localStorage.getItem('lang') || 'zh';
         const i18n = {
@@ -1437,6 +1649,13 @@
                 enter_amount: '请输入金额', no_future_date: '不能选择未来日期', enter_note: '请输入备注',
                 added_cat: '已添加分类', removed_cat: '已移除分类',
                 max_cats: '最多支持15个分类', enter_cat_name: '请输入分类名称',
+                level_title: '等级轨迹', level_current: '当前', level_streak: '连续天数', level_total_tx: '总记账笔数', level_budget_hits: '预算达标', level_route: '等级路线', level_achievements: '已解锁成就', level_achievement_unlock: '隐藏成就解锁', level_req: (days, tx, hits) => `连续${days}天 · ${tx}笔 · 预算达标${hits}次`,
+                edit_cat: '编辑分类', tap_change_icon: '点击换图标', cat_created: (name) => `已创建分类「${name}」并归入`, cat_learned: (desc, label) => `已学习：「${desc}」→ ${label}`, level_up: (title) => `▲ 升级！你现在是「${title}」`,
+                level_names: ['无意识消费体','初级观察者','消费解构师','预算博弈家','延迟满足型人格','资产编译器','财务主权者'],
+                level_descs: ['钱去哪了？不知道','至少开始看了','知道钱花在哪了','开始跟欲望谈判','能忍住不买了','钱开始听你的话','你拥有你的生活'],
+                ach_names: {night_owl:'凌晨经济学家',big_day:'日入斗金',zero_spend:'断舍离',all_round:'精确制导',round_lover:'强迫症确诊',early_bird:'时间管理大师',speed_run:'闪电记账',archaeologist:'考古学家',cat_king:'品类王者',centurion:'百笔斩'},
+                ach_descs: {night_owl:'凌晨2-5点记了一笔账',big_day:'单笔收入超过10,000',zero_spend:'连续7天零支出',all_round:'月预算使用率在95%-105%之间',round_lover:'连续20笔金额全是整数',early_bird:'连续7天在同一小时内记账',speed_run:'一分钟内记了3笔',archaeologist:'记录了30天前的消费',cat_king:'某分类连续30天都有消费',centurion:'累计记账100笔'},
+                comeback_msgs: ['欢迎回来，你的钱没等你，但我等了','失踪人口回归！这几天花的钱，它们不会自己记的','回来就好，你不在的时候余额哭了好几次'],
                 today: '今天', yesterday: '昨天',
                 close: '关闭', new_cat_placeholder: '新分类...',
                 enter_book_name: '请输入账本名称', book_created: '已创建账本',
@@ -1501,6 +1720,13 @@
                 enter_amount: 'Please enter amount', enter_note: 'Please enter a note',
                 added_cat: 'Category added', removed_cat: 'Category removed',
                 max_cats: 'Max 15 categories', enter_cat_name: 'Please enter category name',
+                level_title: 'Level Progress', level_current: 'Current', level_streak: 'Streak', level_total_tx: 'Total Records', level_budget_hits: 'Budget Hits', level_route: 'Level Path', level_achievements: 'Achievements Unlocked', level_achievement_unlock: 'Hidden Achievement Unlocked', level_req: (days, tx, hits) => `${days}d streak · ${tx} records · ${hits} budget hits`,
+                edit_cat: 'Edit Category', tap_change_icon: 'Tap to change icon', cat_created: (name) => `Created category "${name}"`, cat_learned: (desc, label) => `Learned: "${desc}" → ${label}`, level_up: (title) => `▲ Level up! Now "${title}"`,
+                level_names: ['Unconscious Spender','Beginner Observer','Spending Analyst','Budget Negotiator','Delayed Gratifier','Asset Compiler','Financial Sovereign'],
+                level_descs: ['Where does the money go? No clue','At least you started looking','You know where it goes now','Negotiating with desires','Can resist the urge to buy','Money listens to you now','You own your life'],
+                ach_names: {night_owl:'Night Owl Economist',big_day:'Big Payday',zero_spend:'Minimalist',all_round:'Precision Strike',round_lover:'OCD Confirmed',early_bird:'Time Manager',speed_run:'Speed Logger',archaeologist:'Archaeologist',cat_king:'Category King',centurion:'Century Club'},
+                ach_descs: {night_owl:'Logged an expense at 2-5 AM',big_day:'Single income over 10,000',zero_spend:'Zero spending for 7 days straight',all_round:'Monthly budget usage between 95%-105%',round_lover:'20 consecutive round-number entries',early_bird:'Logged at the same hour for 7 days',speed_run:'3 entries within 1 minute',archaeologist:'Logged a 30+ day old expense',cat_king:'One category with spending for 30 days straight',centurion:'100 total entries'},
+                comeback_msgs: ['Welcome back. Your money didn\'t wait, but I did','The prodigal spender returns! Those expenses won\'t log themselves','Good to have you back. Your balance cried while you were gone'],
                 today: 'Today', yesterday: 'Yesterday',
                 close: 'Close', new_cat_placeholder: 'New category...',
                 enter_book_name: 'Please enter book name', book_created: 'Book created',
@@ -1565,6 +1791,13 @@
                 enter_amount: '金額を入力', enter_note: 'メモを入力',
                 added_cat: 'カテゴリ追加', removed_cat: 'カテゴリ削除',
                 max_cats: '最大15カテゴリ', enter_cat_name: 'カテゴリ名を入力',
+                level_title: 'レベル進捗', level_current: '現在', level_streak: '継続日数', level_total_tx: '合計記録数', level_budget_hits: '予算達成', level_route: 'レベルの道のり', level_achievements: '獲得した実績', level_achievement_unlock: '隠し実績を解除！', level_req: (days, tx, hits) => `${days}日継続 · ${tx}件 · 予算達成${hits}回`,
+                edit_cat: 'カテゴリ編集', tap_change_icon: 'タップでアイコン変更', cat_created: (name) => `「${name}」カテゴリを作成`, cat_learned: (desc, label) => `学習済み：「${desc}」→ ${label}`, level_up: (title) => `▲ レベルアップ！「${title}」に昇格`,
+                level_names: ['無自覚消費体','初級観察者','消費解析師','予算交渉人','我慢マスター','資産コンパイラ','財務の主権者'],
+                level_descs: ['お金どこ行った？知らん','少なくとも見始めた','使い道が分かってきた','欲望と交渉中','我慢できるようになった','お金が言うことを聞く','人生を手に入れた'],
+                ach_names: {night_owl:'深夜のエコノミスト',big_day:'大当たりの日',zero_spend:'断捨離',all_round:'精密射撃',round_lover:'きっちり症候群',early_bird:'タイムマネジャー',speed_run:'スピード記録',archaeologist:'考古学者',cat_king:'カテゴリの王',centurion:'百記録達成'},
+                ach_descs: {night_owl:'深夜2-5時に記録した',big_day:'1件で10,000以上の収入',zero_spend:'7日間連続で支出ゼロ',all_round:'月間予算消化率95%-105%',round_lover:'連続20件がすべて整数',early_bird:'7日間同じ時間帯に記録',speed_run:'1分以内に3件記録',archaeologist:'30日以上前の支出を記録',cat_king:'あるカテゴリで30日連続支出',centurion:'累計100件記録'},
+                comeback_msgs: ['おかえり。お金は待ってくれないけど、僕は待ってたよ','帰還確認！留守中の支出、勝手に記録されないからね','戻ってきてくれてよかった。残高が泣いてたよ'],
                 today: '今日', yesterday: '昨日',
                 close: '閉じる', new_cat_placeholder: '新しいカテゴリ...',
                 enter_book_name: '帳簿名を入力', book_created: '帳簿を作成',
@@ -1629,6 +1862,13 @@
                 enter_amount: '금액을 입력하세요', enter_note: '메모를 입력하세요',
                 added_cat: '카테고리 추가됨', removed_cat: '카테고리 삭제됨',
                 max_cats: '최대 15개 카테고리', enter_cat_name: '카테고리 이름을 입력하세요',
+                level_title: '레벨 현황', level_current: '현재', level_streak: '연속 일수', level_total_tx: '총 기록 수', level_budget_hits: '예산 달성', level_route: '레벨 경로', level_achievements: '획득한 업적', level_achievement_unlock: '히든 업적 달성!', level_req: (days, tx, hits) => `${days}일 연속 · ${tx}건 · 예산 달성 ${hits}회`,
+                edit_cat: '카테고리 편집', tap_change_icon: '탭하여 아이콘 변경', cat_created: (name) => `"${name}" 카테고리 생성됨`, cat_learned: (desc, label) => `학습 완료: "${desc}" → ${label}`, level_up: (title) => `▲ 레벨 업! "${title}" 달성`,
+                level_names: ['무의식 소비러','초보 관찰자','소비 분석가','예산 협상가','만족 지연러','자산 컴파일러','재정 주권자'],
+                level_descs: ['돈이 어디 갔지? 모름','최소한 보기 시작했다','어디에 쓰는지 알게 됨','욕망과 협상 중','이제 참을 수 있다','돈이 말을 듣기 시작','내 인생의 주인'],
+                ach_names: {night_owl:'새벽 이코노미스트',big_day:'대박 수입',zero_spend:'미니멀리스트',all_round:'정밀 타격',round_lover:'강박증 확진',early_bird:'시간 관리자',speed_run:'번개 기록',archaeologist:'고고학자',cat_king:'카테고리 왕',centurion:'백 기록 달성'},
+                ach_descs: {night_owl:'새벽 2-5시에 기록함',big_day:'단일 수입 10,000 이상',zero_spend:'7일 연속 지출 제로',all_round:'월 예산 사용률 95%-105%',round_lover:'연속 20건 모두 정수 금액',early_bird:'7일 연속 같은 시간에 기록',speed_run:'1분 안에 3건 기록',archaeologist:'30일 이전 지출 기록',cat_king:'한 카테고리 30일 연속 지출',centurion:'누적 100건 기록'},
+                comeback_msgs: ['다시 오셨군요. 돈은 안 기다렸지만 저는 기다렸어요','실종자 귀환! 며칠간 쓴 돈, 알아서 기록 안 돼요','돌아와줘서 다행. 잔액이 많이 울었어요'],
                 today: '오늘', yesterday: '어제',
                 close: '닫기', new_cat_placeholder: '새 카테고리...',
                 enter_book_name: '가계부 이름을 입력하세요', book_created: '가계부 생성됨',
@@ -1704,7 +1944,20 @@
             if (greetEl) {
                 const h = new Date().getHours();
                 const key = h < 12 ? 'greeting_morning' : h < 18 ? 'greeting_afternoon' : 'greeting_evening';
-                greetEl.textContent = t(key);
+                const ld = getLevelData();
+                greetEl.textContent = `${t(key)} · ${lvlTitle(ld.level)}`;
+            }
+            const profileBadge = document.getElementById('profile-level-badge');
+            if (profileBadge) {
+                const ld2 = getLevelData();
+                const lvl2 = LEVELS[ld2.level] || LEVELS[0];
+                profileBadge.innerHTML = `<span style="background:linear-gradient(135deg,#c084fc,#818cf8,#67e8f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:500">Lv.${ld2.level}</span> <span style="background:linear-gradient(135deg,#e9d5ff,#c4b5fd,#a5b4fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:500">${lvlTitle(ld2.level)}</span> <i data-lucide="flame" class="w-[16px] h-[16px] inline-block" style="color:#f97316;fill:#fb923c;"></i><span class="text-orange-400 font-num">${ld2.streak}</span>`;
+                lucide.createIcons();
+            }
+            const streakEl = document.getElementById('streak-count');
+            if (streakEl) {
+                const ld3 = getLevelData();
+                streakEl.textContent = ld3.streak || 0;
             }
 
             // Date filter modal
@@ -1869,6 +2122,16 @@
             }
             renderBookSelector();
             renderAll();
+
+            // Level system: check streak on load
+            const _streakData = checkStreak();
+            if (_streakData._comeback) {
+                const _cbMsgs = getComebackMsgs();
+                const _cbMsg = _cbMsgs[Math.floor(Math.random() * _cbMsgs.length)];
+                setTimeout(() => showToast(_cbMsg, 'info'), 800);
+                _streakData._comeback = false;
+                saveLevelData(_streakData);
+            }
 
             const savedCount = txs.length;
             if (savedCount > 0) {
@@ -2093,6 +2356,7 @@
 
         function openBookManager() {
             document.getElementById('book-modal').classList.remove('hidden');
+            closeBookIconPicker();
             renderBookList();
         }
 
@@ -2466,6 +2730,39 @@
             });
 
             container.innerHTML = `<div class="glass-card p-6 rounded-[24px]"><h3 class="text-[16px] font-normal text-white mb-4">${t('budget_stats') || '预算'}</h3><div class="space-y-3 text-[12px]">${rows}</div></div>`;
+        }
+
+        function renderHomeBudgetReminder() {
+            const el = document.getElementById('home-budget-reminder');
+            if (!el) return;
+            if (totalBudget <= 0) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+
+            const now = new Date();
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+            const spent = txs.filter(t => t.type === 'expense' && new Date(t.date) >= monthStart && new Date(t.date) <= monthEnd).reduce((s, t) => s + t.amount, 0);
+
+            const remain = totalBudget - spent;
+            const pct = Math.round((spent / totalBudget) * 100);
+            const over = remain < 0;
+
+            let msg, color;
+            if (over) {
+                msg = `已超支 ${Math.abs(remain).toLocaleString()}`;
+                color = '#ef4444';
+            } else if (pct >= 80) {
+                msg = `已用 ${pct}%，剩余 ${remain.toLocaleString()}`;
+                color = '#f59e0b';
+            } else {
+                msg = `已用 ${pct}%，剩余 ${remain.toLocaleString()}`;
+                color = '#7c3aed';
+            }
+
+            el.classList.remove('hidden');
+            el.innerHTML = `<div class="flex items-center justify-between px-4 py-2 rounded-2xl" style="background:linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(168,85,247,0.06) 50%, rgba(59,130,246,0.08) 100%)">
+                <span class="text-[12px] text-white/80">${t('total_budget') || '总预算'} ${totalBudget.toLocaleString()}</span>
+                <span class="text-[12px]" style="color:${color}">${msg}</span>
+            </div>`;
         }
 
         function initSwipe(el) {
@@ -3033,8 +3330,24 @@
                         mode: 'nearest',
                         axis: 'x',
                         intersect: false
+                    },
+                    onClick: function(e, elements) {
+                        const el = document.getElementById('chart-tooltip');
+                        if (el && el.style.opacity === '1' && elements.length === 0) {
+                            el.style.opacity = '0';
+                        }
                     }
                 }
+            });
+
+            const canvas = document.getElementById('trendChart');
+            canvas.addEventListener('touchend', function() {
+                setTimeout(() => {
+                    const el = document.getElementById('chart-tooltip');
+                    if (el && el.style.opacity === '1') {
+                        setTimeout(() => { el.style.opacity = '0'; }, 2500);
+                    }
+                }, 100);
             });
         }
 
@@ -3115,16 +3428,21 @@
         function closeFilterCatModal() { document.getElementById('filter-cat-modal').classList.add('hidden'); }
 
         // --- Speech ---
-        let speechRunning = false;
+        // 规则: 1.只弹一次权限 2.不叠加旧文字 3.每次都能用
+        // 方案: continuous:true + 永不stop/abort + offset追踪
         let speechActive = false;
+        let speechRunning = false;
         let silenceTimer = null;
         let lastInterim = '';
+        let _resultOffset = 0;
+        let _lastResultsLen = 0;
 
         function finishSpeech(text) {
             if (!text || !speechActive) return;
             speechActive = false;
             isListening = false;
             lastInterim = '';
+            _resultOffset = _lastResultsLen;
             if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
             document.getElementById('mic-btn').classList.remove('mic-active');
             hideVoiceOverlay();
@@ -3162,30 +3480,44 @@
 
                 recognition.onend = function() {
                     speechRunning = false;
-                    if (speechActive && lastInterim) {
-                        finishSpeech(lastInterim);
-                        lastInterim = '';
-                    } else {
-                        isListening = false;
-                        document.getElementById('mic-btn').classList.remove('mic-active');
-                        hideVoiceOverlay();
+                    if (speechActive) {
+                        if (lastInterim) {
+                            finishSpeech(lastInterim);
+                            lastInterim = '';
+                        } else {
+                            speechActive = false;
+                            isListening = false;
+                            document.getElementById('mic-btn').classList.remove('mic-active');
+                            hideVoiceOverlay();
+                        }
                     }
                 };
 
                 recognition.onresult = function(event) {
-                    if (!speechActive) return;
+                    _lastResultsLen = event.results.length;
+                    if (!speechActive) {
+                        _resultOffset = event.results.length;
+                        return;
+                    }
+                    // iOS可能重置results数组
+                    if (_resultOffset > event.results.length) {
+                        _resultOffset = 0;
+                    }
                     let finalTranscript = '';
                     let interimTranscript = '';
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    const start = Math.max(event.resultIndex, _resultOffset);
+                    for (let i = start; i < event.results.length; ++i) {
                         if (event.results[i].isFinal) {
                             finalTranscript += event.results[i][0].transcript;
                         } else {
                             interimTranscript += event.results[i][0].transcript;
                         }
                     }
+                    if (!finalTranscript && !interimTranscript) return;
                     const interimEl = document.getElementById('voice-interim-text');
                     if (interimEl) interimEl.innerText = interimTranscript || finalTranscript;
                     if (finalTranscript) {
+                        _resultOffset = event.results.length;
                         finishSpeech(finalTranscript);
                     } else if (interimTranscript) {
                         lastInterim = interimTranscript;
@@ -3212,28 +3544,22 @@
                 speechActive = false;
                 isListening = false;
                 lastInterim = '';
+                _resultOffset = _lastResultsLen;
                 if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
                 document.getElementById('mic-btn').classList.remove('mic-active');
                 hideVoiceOverlay();
                 return;
             }
             if (!recognition) return;
+            const langMap = {zh:'zh-CN', en:'en-US', ja:'ja-JP', ko:'ko-KR'};
+            recognition.lang = langMap[currentLang] || 'zh-CN';
             speechActive = true;
             isListening = true;
             lastInterim = '';
             document.getElementById('mic-btn').classList.add('mic-active');
             showVoiceOverlay();
-            if (!speechRunning) {
-                try {
-                    recognition.start();
-                    speechRunning = true;
-                } catch(e) {
-                    speechActive = false;
-                    isListening = false;
-                    document.getElementById('mic-btn').classList.remove('mic-active');
-                    hideVoiceOverlay();
-                }
-            }
+            // 尝试start - 如果已在运行会抛错，忽略即可（说明recognition活着）
+            try { recognition.start(); speechRunning = true; } catch(e) {}
         }
 
         // --- API Key & Fallback Speech (getUserMedia + Gemini) ---
@@ -3926,6 +4252,20 @@
                 }
             }
 
+            // === Greetings ===
+            if (/^(你好|嗨|hi|hello|hey|哈喽|在吗|在不在|干嘛呢)$/i.test(text)) {
+                const greets = [
+                    '在的在的！钱包还好吗？有啥要记的尽管说~',
+                    '嗨！我是你的记账搭子，随时准备见证你的消费实力💸',
+                    '来了老板！今天准备花钱还是数钱？',
+                    '你好呀！我每天的工作就是看你怎么花钱，挺刺激的',
+                    '在呢！说吧，又买了啥好东西？',
+                    '报告！记账员已就位，等待你的钱包发出悲鸣',
+                    '嘿！花钱的时候想起我了？我很感动（并掏出小本本）',
+                ];
+                return greets[Math.floor(Math.random() * greets.length)];
+            }
+
             // === Context-aware follow-up corrections ===
             if (lastAiTxId) {
                 const lastTx = txs.find(tx => tx.id === lastAiTxId);
@@ -3996,6 +4336,21 @@
                                     renderAll();
                                     return `<i data-lucide="check" class="w-4 h-4 inline-block text-teal-neon"></i> 分类已改为${allCatsCorr[key].label}`;
                                 }
+                            }
+                            // 没匹配到已有分类 → 自动创建自定义分类
+                            if (lastTx.cat === 'other' && catCorrInput.length >= 1) {
+                                const customKey = 'custom_' + catCorrInput;
+                                if (!EXPENSE_CATS[customKey]) {
+                                    EXPENSE_CATS[customKey] = { label: catCorrInput, color: PRESET_COLORS[Object.keys(EXPENSE_CATS).length % PRESET_COLORS.length], icon: 'tag' };
+                                    const customs = JSON.parse(localStorage.getItem('custom_expense_cats') || '{}');
+                                    customs[customKey] = EXPENSE_CATS[customKey];
+                                    localStorage.setItem('custom_expense_cats', JSON.stringify(customs));
+                                }
+                                pushUndo('modify', {...lastTx});
+                                lastTx.cat = customKey;
+                                learnCategory(lastTx.desc, customKey);
+                                renderAll();
+                                return `<i data-lucide="check" class="w-4 h-4 inline-block text-teal-neon"></i> ${t('cat_created')(catCorrInput)}`;
                             }
                         }
                     }
@@ -4324,6 +4679,22 @@
                 }
             }
 
+            // 规则学习: "以后/未来的XX都记成YY"
+            const ruleMatch = text.match(/(?:以后|未来|之后|今后)(?:的|把)?(.+?)(?:都|全部|全|统一)?(?:记成|记为|算成|算作|归为|归到|分类为|算|记)(.+)/);
+            if (ruleMatch) {
+                const ruleDesc = ruleMatch[1].replace(/的$/, '').trim();
+                const ruleCatName = ruleMatch[2].replace(/[类吧]$/, '').trim();
+                const allCatsRule = {...EXPENSE_CATS, ...INCOME_CATS};
+                let foundKey = null;
+                for (let key in allCatsRule) {
+                    if (allCatsRule[key].label === ruleCatName) { foundKey = key; break; }
+                }
+                if (foundKey && ruleDesc.length >= 1 && ruleDesc.length <= 8) {
+                    learnCategory(ruleDesc, foundKey);
+                    return `<i data-lucide="check" class="w-4 h-4 inline-block text-teal-neon"></i> ${t('cat_learned')(ruleDesc, allCatsRule[foundKey].label)}`;
+                }
+            }
+
             // Detect contextual modify
             const isContextModify = text.match(/(这个|上一个|那个|刚才|上一笔)/) && text.match(/(换|变成|改成|改为|改名|换成|换下)/);
 
@@ -4562,7 +4933,7 @@
 
             if (amount > 0) {
                 // Smart confirmation for large amounts with uncertain category
-                if (amount >= 5000 && !catInfo) {
+                if (amount >= 100000 && !catInfo) {
                     pendingAction = { type: 'confirm-record', payload: { timeInfo, text, cleanText, amountText, numMatch, amount, catInfo } };
                     const confirmMsg = currentLang === 'zh' ? `确认记录 <span class="text-teal-neon font-num font-bold">${amount}</span> 元吗？（说"确认"继续，"取消"放弃）` : `Confirm recording <span class="text-teal-neon font-num font-bold">${amount}</span>? (say "yes" or "no")`;
                     return confirmMsg;
@@ -4728,6 +5099,9 @@
             txs.push(newTx);
             pushUndo('add', {...newTx});
             lastAiTxId = newTx.id;
+            checkStreak();
+            const _lvlResult = addLevelXP('record');
+            checkAchievements({ action: 'record', type, amount, cat, date: targetDate.toISOString() });
             renderAll();
 
             const catLabel = t('cat_' + cat) || (type === 'income' ? INCOME_CATS : EXPENSE_CATS)[cat]?.label || '';
@@ -4747,7 +5121,6 @@
                 const customLabels = customKeys.map(k => EXPENSE_CATS[k].label).join('、') || '(无)';
                 const askMsg = currentLang === 'zh' ? `这笔是什么类型的？（如：餐饮、交通、购物...）` : currentLang === 'en' ? `What category is this? (e.g. food, transport, shopping...)` : currentLang === 'ja' ? `カテゴリは？（食費、交通、買い物...）` : `어떤 카테고리인가요? (식비, 교통, 쇼핑...)`;
                 response += `<br><span class="text-white/50 text-xs"><i data-lucide="tag" class="w-3 h-3 inline-block"></i> ${askMsg}</span>`;
-                response += `<br><span class="text-white/25 text-[10px]">[debug] 自定义分类: ${customLabels} | input="${text}" stripped="${text.replace(/[\\d\\s.]+/g,'').trim()}"</span>`;
             }
 
             // Feature 4: Budget warning
@@ -4756,6 +5129,10 @@
             if (type === 'expense') response += checkAnomaly(amount, cat);
             // Feature 9: Shortcut suggestion
             response += checkShortcutSuggestion(desc, amount, cat);
+            // Level up notification
+            if (_lvlResult && _lvlResult.leveledUp) {
+                response += `<br><span class="text-cyber-purple text-xs font-medium">${t('level_up')(_lvlResult.title)}</span>`;
+            }
 
             return response;
         }
@@ -4886,6 +5263,9 @@
                 if (elMonthlyIncome) elMonthlyIncome.innerText = periodIncome.toLocaleString('en-US', {minimumFractionDigits: 2});
             }
 
+            const netRow = document.getElementById('net-income-row');
+            if (netRow) { if (periodIncome > 0) netRow.classList.remove('hidden'); else netRow.classList.add('hidden'); }
+
             if (elTrendBadge) {
                 let trendHtml = '';
                 if (prevMonthlyExpense > 0) {
@@ -4916,6 +5296,7 @@
             }
 
             renderBudgetBars();
+            renderHomeBudgetReminder();
             renderTransactionList();
             updateHomeFilters();
             applyI18n();
@@ -5115,6 +5496,7 @@
 
         function openCategoryManager() {
             document.getElementById('category-modal').classList.remove('hidden');
+            closeCatIconPicker();
             setManageType(currentManageType);
         }
         function closeCategoryManager() {
@@ -5147,6 +5529,9 @@
             if (preview) { preview.setAttribute('data-lucide', 'tag'); lucide.createIcons(); }
         }
 
+        let editingCatKey = null;
+        let editingCatIcon = null;
+
         function renderCategoryList() {
             const list = document.getElementById('category-list');
             const cats = currentManageType === 'expense' ? EXPENSE_CATS : INCOME_CATS;
@@ -5155,19 +5540,123 @@
 
             document.getElementById('cat-limit-info').innerText = `${keys.length}/15`;
 
-            list.innerHTML = `<div class="grid grid-cols-4 gap-x-2 gap-y-4 py-2">${keys.map(key => {
+            const sysHtml = keys.filter(k => sysKeys.includes(k)).map(key => {
                 const c = cats[key];
-                const isSystem = sysKeys.includes(key);
-                const catName = t('cat_' + key) || c.label;
-                return `<div class="flex flex-col items-center gap-2 relative group">
+                return `<div class="flex flex-col items-center gap-2">
                     <div class="w-12 h-12 rounded-full flex items-center justify-center bg-white/5" style="color:${c.color}">
                         <i data-lucide="${c.icon||'tag'}" class="w-6 h-6"></i>
                     </div>
-                    <span class="text-[14px] text-white truncate max-w-full">${catName}</span>
-                    ${!isSystem ? `<button onclick="event.stopPropagation();removeCategory('${key}')" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500/80 text-white flex items-center justify-center opacity-0 group-active:opacity-100 transition-opacity"><i data-lucide="x" class="w-3 h-3"></i></button>` : ''}
+                    <span class="text-[11px] text-white/50 truncate max-w-full">${t('cat_'+key)||c.label}</span>
                 </div>`;
-            }).join('')}</div>`;
+            }).join('');
+
+            const customKeys = keys.filter(k => !sysKeys.includes(k));
+            const customHtml = customKeys.map(key => {
+                const c = cats[key];
+                return `<div onclick="openEditCategory('${key}')" class="flex items-center gap-3 px-3 py-2.5 rounded-2xl bg-white/[0.03] active:bg-white/10 transition-colors cursor-pointer">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 shrink-0" style="color:${c.color}">
+                        <i data-lucide="${c.icon||'tag'}" class="w-5 h-5"></i>
+                    </div>
+                    <span class="flex-1 text-[14px] text-white truncate">${c.label}</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-white/20 shrink-0"></i>
+                </div>`;
+            }).join('');
+
+            list.innerHTML = `
+                <div class="grid grid-cols-4 gap-x-2 gap-y-3 py-2 mb-3">${sysHtml}</div>
+                ${customKeys.length ? `<div class="text-[10px] text-white/30 uppercase tracking-wider mb-2 mt-1">自定义</div>
+                <div class="flex flex-col gap-2 pb-2">${customHtml}</div>` : ''}`;
             lucide.createIcons();
+        }
+
+        function openEditCategory(key) {
+            editingCatKey = key;
+            const cats = currentManageType === 'expense' ? EXPENSE_CATS : INCOME_CATS;
+            const c = cats[key];
+            if (!c) return;
+            editingCatIcon = c.icon || 'tag';
+            const panel = document.getElementById('icon-picker-panel');
+            panel.innerHTML = `
+                <div class="p-6 pb-2">
+                    <div class="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5"></div>
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold text-white tracking-tight">${t('edit_cat')}</h3>
+                        <button onclick="closeEditCategory()" class="flex items-center justify-center"><i data-lucide="x" class="w-5 h-5 text-gray-600"></i></button>
+                    </div>
+                    <div class="flex flex-col items-center gap-4 mb-6">
+                        <div onclick="showEditIconGrid()" class="w-16 h-16 rounded-full flex items-center justify-center bg-white/5 border-2 border-dashed border-white/20 active:border-cyber-purple/50 transition-colors cursor-pointer" style="color:${c.color}" id="edit-cat-icon-wrap">
+                            <i data-lucide="${editingCatIcon}" class="w-7 h-7" id="edit-cat-icon-preview"></i>
+                        </div>
+                        <span class="text-[11px] text-white/30">${t('tap_change_icon')}</span>
+                    </div>
+                    <div class="mb-6">
+                        <input type="text" id="edit-cat-name" value="${c.label}" maxlength="6" class="w-full bg-white/5 border border-white/10 rounded-[12px] px-4 py-3 text-white text-center text-[16px] focus:outline-none focus:border-cyber-purple/50 transition-colors">
+                    </div>
+                    <div id="edit-icon-grid" class="hidden max-h-[30vh] overflow-y-auto no-scrollbar mb-4">
+                        <div class="grid grid-cols-6 gap-3"></div>
+                    </div>
+                </div>
+                <div class="mt-auto p-6 pt-0 flex gap-3">
+                    <button onclick="deleteEditCategory()" class="flex-1 h-12 rounded-full border border-[#7c3aed] text-[#a855f7] text-[14px] font-medium active:scale-95 transition-all">${t('delete')}</button>
+                    <button onclick="saveEditCategory()" class="flex-1 h-12 rounded-full bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-white text-[14px] font-medium active:scale-95 transition-all shadow-[0_8px_24px_-4px_rgba(124,58,237,0.4)]">${t('save')}</button>
+                </div>`;
+            panel.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function showEditIconGrid() {
+            const grid = document.getElementById('edit-icon-grid');
+            if (grid.classList.contains('hidden')) {
+                grid.classList.remove('hidden');
+                grid.querySelector('.grid').innerHTML = CAT_ICONS.map(icon => `
+                    <div onclick="pickEditIcon('${icon}')" class="flex items-center justify-center w-11 h-11 rounded-xl cursor-pointer transition-all ${icon === editingCatIcon ? 'bg-[#7c3aed] scale-110' : 'bg-white/5 active:bg-white/10'}">
+                        <i data-lucide="${icon}" class="w-5 h-5 ${icon === editingCatIcon ? 'text-white' : 'text-white/50'}"></i>
+                    </div>`).join('');
+                lucide.createIcons();
+            } else {
+                grid.classList.add('hidden');
+            }
+        }
+
+        function pickEditIcon(icon) {
+            editingCatIcon = icon;
+            const preview = document.getElementById('edit-cat-icon-preview');
+            if (preview) { preview.setAttribute('data-lucide', icon); lucide.createIcons(); }
+            document.getElementById('edit-icon-grid').querySelector('.grid').innerHTML = CAT_ICONS.map(ic => `
+                <div onclick="pickEditIcon('${ic}')" class="flex items-center justify-center w-11 h-11 rounded-xl cursor-pointer transition-all ${ic === icon ? 'bg-[#7c3aed] scale-110' : 'bg-white/5 active:bg-white/10'}">
+                    <i data-lucide="${ic}" class="w-5 h-5 ${ic === icon ? 'text-white' : 'text-white/50'}"></i>
+                </div>`).join('');
+            lucide.createIcons();
+        }
+
+        function saveEditCategory() {
+            if (!editingCatKey) return;
+            const cats = currentManageType === 'expense' ? EXPENSE_CATS : INCOME_CATS;
+            const name = document.getElementById('edit-cat-name').value.trim();
+            if (!name) { showToast('请输入分类名称', 'error'); return; }
+            cats[editingCatKey].label = name;
+            cats[editingCatKey].icon = editingCatIcon;
+            saveCustomCats();
+            closeEditCategory();
+            renderCategoryList();
+            showToast(`已保存「${name}」`);
+        }
+
+        function deleteEditCategory() {
+            if (!editingCatKey) return;
+            const cats = currentManageType === 'expense' ? EXPENSE_CATS : INCOME_CATS;
+            const label = cats[editingCatKey]?.label || '';
+            delete cats[editingCatKey];
+            saveCustomCats();
+            closeEditCategory();
+            renderCategoryList();
+            showToast(`${t('removed_cat')}「${label}」`);
+        }
+
+        function closeEditCategory() {
+            editingCatKey = null;
+            editingCatIcon = null;
+            document.getElementById('icon-picker-panel').classList.add('hidden');
         }
 
         function saveCustomCats() {
@@ -5185,6 +5674,17 @@
         function toggleCatIconPicker() {
             const panel = document.getElementById('icon-picker-panel');
             if (!panel) return;
+            panel.innerHTML = `
+                <div class="p-6 pb-2">
+                    <div class="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5"></div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-white tracking-tight">选择图标</h3>
+                        <button onclick="closeCatIconPicker()" class="flex items-center justify-center"><i data-lucide="x" class="w-5 h-5 text-gray-600"></i></button>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto px-6 pb-10 no-scrollbar">
+                    <div id="icon-picker" class="grid grid-cols-5 gap-4"></div>
+                </div>`;
             panel.classList.remove('hidden');
             renderIconPicker();
         }
