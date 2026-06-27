@@ -2125,6 +2125,8 @@
 
             // Level system: check streak on load
             const _streakData = checkStreak();
+            const _streakEl = document.getElementById('streak-count');
+            if (_streakEl) _streakEl.textContent = _streakData.streak || 0;
             if (_streakData._comeback) {
                 const _cbMsgs = getComebackMsgs();
                 const _cbMsg = _cbMsgs[Math.floor(Math.random() * _cbMsgs.length)];
