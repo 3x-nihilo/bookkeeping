@@ -1435,22 +1435,39 @@
         }
         function saveLevelData(d) { localStorage.setItem('level_data', JSON.stringify(d)); }
 
+        function getLocalDate(offset = 0) {
+            const d = new Date(Date.now() + offset);
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
         function checkStreak() {
             const d = getLevelData();
-            const today = new Date().toISOString().slice(0, 10);
-            if (d.lastActiveDate === today) return d;
-            const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-            if (d.lastActiveDate === yesterday) {
-                d.streak++;
-            } else if (d.lastActiveDate && d.lastActiveDate !== today) {
-                const gap = Math.floor((Date.now() - new Date(d.lastActiveDate).getTime()) / 86400000);
-                if (gap >= 7 && d.level > 0) d.level = Math.max(0, d.level - 1);
-                d.streak = 1;
-                d._comeback = true;
-            } else {
-                d.streak = 1;
+            const today = getLocalDate();
+            // 基于交易记录算streak：从今天往前数连续有记账的天数
+            const txDates = new Set(txs.map(t => {
+                const dt = new Date(t.date);
+                return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+            }));
+            let streak = 0;
+            for (let i = 0; i < 365; i++) {
+                const day = getLocalDate(-i * 86400000);
+                if (txDates.has(day)) {
+                    streak++;
+                } else if (i === 0) {
+                    continue; // 今天还没记也没关系，从昨天开始算
+                } else {
+                    break;
+                }
             }
+            if (streak === 0 && txDates.has(today)) streak = 1;
+            const prevStreak = d.streak;
+            d.streak = streak;
             if (d.streak > d.maxStreak) d.maxStreak = d.streak;
+            // 断签回来检测
+            if (d.lastActiveDate && d.lastActiveDate !== today) {
+                const gap = Math.floor((Date.now() - new Date(d.lastActiveDate).getTime()) / 86400000);
+                if (gap >= 7 && d.level > 0) { d.level = Math.max(0, d.level - 1); }
+                if (gap >= 3 && prevStreak > 0) { d._comeback = true; }
+            }
             d.lastActiveDate = today;
             saveLevelData(d);
             return d;
@@ -2140,6 +2157,15 @@
                 showToast(`${savedCount} ${t('toast_restored')}`, 'info');
             }
             initSwipeToDismiss();
+
+            // PWA切回前台时刷新streak
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    const sd = checkStreak();
+                    const se = document.getElementById('streak-count');
+                    if (se) se.textContent = sd.streak || 0;
+                }
+            });
         };
 
         function initSwipeToDismiss() {
