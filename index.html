@@ -6011,18 +6011,20 @@ Actions:
 - query: Query transactions. data: {"period":"today|week|month|year|all","type":"expense|income|all","cat":"category key or empty"}. Put the natural language summary in reply.
 - delete: Delete records. data: {"match":"matching keyword from desc or amount"}. Do NOT actually delete — ask for confirmation in reply.
 - modify: Modify a record. data: {"match":"matching condition","changes":{}}. Confirm in reply.
+- category: Manage categories. data: {"op":"add|delete|rename","type":"expense|income","key":"category_key","label":"display name","icon":"lucide icon name","color":"hex color","newLabel":"new name (for rename)"}
 - chat: Casual chat or unsupported requests. data:{}.
 
 IMPORTANT RULES:
 - ${langHint}
 - Amount must be a number, not a string.
 - Keep replies short and fun.
-- You can ONLY do: record, query, delete, modify. You CANNOT: clear all data, export, change settings, manage budgets, or any app-level operations. If user asks for these, reply with action "chat" and tell them to do it in the app settings.
+- You can do: record, query, delete, modify, budget, category. You CANNOT: clear all data, export files, change app language/theme, or modify the app itself. For unsupported things, tell user to do it in app settings.
 - NEVER pretend you performed an action you cannot do.
 - For "delete all" or "clear all data" requests, use action "delete" with data: {"match":"__ALL__"}. Always ask for confirmation first.
 - budget: Set/modify/remove budget. data: {"type":"total|category","cat":"category key (if type=category)","amount":number or 0 to remove}
-- You CANNOT: export files, change app language/theme, or modify the app itself. For these, tell user to do it in app settings.
-- CRITICAL: reply MUST be under 30 words. One or two short sentences max. Be witty not wordy.`;
+- category: For adding, use a simple lowercase key (e.g. "milk_tea"). For deleting or renaming, match existing category keys. Default icon: "tag", default color: "#7c3aed".
+- CRITICAL: reply MUST be under 50 words. Keep it short by default, only say more when genuinely needed (e.g. query results, warnings).
+- For record/modify actions, reply MUST naturally mention the amount, category, and what it's for — but weave them into a fun sentence, don't list them robotically. Examples: "又剁手了！200块花在手办上，绫波丽确实值得～" / "300 on dining — that hotpot better be worth it 🍲". Never skip these info, but keep it conversational with a short comment.`;
 
             proConversation.push({ role: 'user', content: text });
             if (proConversation.length > 12) proConversation = proConversation.slice(-10);
@@ -6056,7 +6058,9 @@ IMPORTANT RULES:
                     lastAiTxId = tx.id;
                     renderAll();
                     checkAchievements();
-                    return parsed.reply || `已记录: ${tx.desc} ${tx.amount}元`;
+                    const catLabel = (EXPENSE_CATS[tx.cat] || INCOME_CATS[tx.cat] || {}).label || tx.cat;
+                    const fallbackReply = currentLang === 'zh' ? `已记录: ${tx.type==='income'?'收入':'支出'}${tx.amount}元，分类：${catLabel}，备注：${tx.desc||'无'}` : `Recorded: ${tx.type} ${tx.amount}, cat: ${catLabel}, note: ${tx.desc||'none'}`;
+                    return parsed.reply || fallbackReply;
                 }
 
                 if (parsed.action === 'query' && parsed.data) {
@@ -6071,6 +6075,27 @@ IMPORTANT RULES:
                             pendingAction = { type: 'batch-delete', payload: found };
                             const confirmHint = currentLang === 'zh' ? '确认请说"确认"' : currentLang === 'ja' ? '「確認」と言ってください' : currentLang === 'ko' ? '"확인"이라고 말해주세요' : 'Say "confirm" to proceed';
                             return (parsed.reply || `${found.length} records found`) + `<br><br>${confirmHint}`;
+                        }
+                    }
+                    return parsed.reply || (currentLang === 'zh' ? '没有找到匹配的记录' : 'No matching records found');
+                }
+
+                if (parsed.action === 'modify' && parsed.data) {
+                    const d = parsed.data;
+                    const match = d.match;
+                    if (match) {
+                        const found = txs.find(tx => (tx.desc && tx.desc.includes(match)) || String(tx.amount) === match || tx.id === match) || (lastAiTxId && txs.find(tx => tx.id === lastAiTxId));
+                        if (found && d.changes) {
+                            pushUndo('modify', {...found});
+                            if (d.changes.amount !== undefined) found.amount = Number(d.changes.amount);
+                            if (d.changes.cat) found.cat = d.changes.cat;
+                            if (d.changes.desc) found.desc = d.changes.desc;
+                            if (d.changes.type) found.type = d.changes.type;
+                            if (d.changes.date) found.date = new Date(d.changes.date + 'T12:00:00').toISOString();
+                            renderAll();
+                            const modCatLabel = (EXPENSE_CATS[found.cat] || INCOME_CATS[found.cat] || {}).label || found.cat;
+                            const modFallback = currentLang === 'zh' ? `已修改: ${found.type==='income'?'收入':'支出'}${found.amount}元，分类：${modCatLabel}，备注：${found.desc||'无'}` : `Updated: ${found.type} ${found.amount}, cat: ${modCatLabel}, note: ${found.desc||'none'}`;
+                            return parsed.reply || modFallback;
                         }
                     }
                     return parsed.reply || (currentLang === 'zh' ? '没有找到匹配的记录' : 'No matching records found');
@@ -6095,6 +6120,36 @@ IMPORTANT RULES:
                         checkAchievements({ action: 'budget_set' });
                     }
                     return parsed.reply || (amt > 0 ? `Budget set: ${amt}` : 'Budget removed');
+                }
+
+                if (parsed.action === 'category' && parsed.data) {
+                    const d = parsed.data;
+                    const catType = d.type || 'expense';
+                    const cats = catType === 'income' ? INCOME_CATS : EXPENSE_CATS;
+
+                    if (d.op === 'add' && d.key && d.label) {
+                        cats[d.key] = { label: d.label, icon: d.icon || 'tag', color: d.color || '#7c3aed' };
+                        saveCustomCats();
+                        renderAll();
+                        return parsed.reply || `Category "${d.label}" added`;
+                    }
+                    if (d.op === 'delete' && d.key) {
+                        const label = cats[d.key]?.label || d.key;
+                        delete cats[d.key];
+                        saveCustomCats();
+                        renderAll();
+                        return parsed.reply || `Category "${label}" removed`;
+                    }
+                    if (d.op === 'rename' && d.key && d.newLabel) {
+                        if (cats[d.key]) {
+                            cats[d.key].label = d.newLabel;
+                            saveCustomCats();
+                            renderAll();
+                            return parsed.reply || `Category renamed to "${d.newLabel}"`;
+                        }
+                        return parsed.reply || 'Category not found';
+                    }
+                    return parsed.reply || 'Category operation failed';
                 }
 
                 return parsed.reply || raw;
