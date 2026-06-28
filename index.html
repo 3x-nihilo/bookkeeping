@@ -922,7 +922,7 @@
             </div>
 
             <!-- 版本 -->
-            <p class="text-center text-[11px] text-white/15 pt-4 font-num">v3.3.2 · build 0628</p>
+            <p class="text-center text-[11px] text-white/15 pt-4 font-num">v3.3.3 · build 0628</p>
         </section>
 
     </main>
@@ -6077,7 +6077,8 @@ Actions:
 
 IMPORTANT RULES:
 - ${langHint}
-- Amount must be a number, not a string.
+- Amount must be a positive number (absolute value). If user says "56.11-6.34", compute 56.11-6.34=49.77 and use 49.77.
+- desc should be a SHORT label (merchant/item name like "小象超市", "星巴克", "绫波丽"), NOT the full input text or math expression. Strip numbers and verbs.
 - Keep replies short and fun.
 - You can do: record, query, delete, modify, budget, category. You CANNOT: clear all data, export files, change app language/theme, or modify the app itself. For unsupported things, tell user to do it in app settings.
 - NEVER pretend you performed an action you cannot do.
@@ -6086,10 +6087,10 @@ IMPORTANT RULES:
 - category: For adding, use a simple lowercase key (e.g. "milk_tea"). For deleting or renaming, match existing category keys. Default icon: "tag", default color: "#7c3aed".
 - Default type is "expense". Only use "income" when user EXPLICITLY says income words (收入/工资/薪水/奖金/赚了/进账/到账/转入/red packet received). If ambiguous, always default to expense.
 - Category selection: choose the category whose meaning best matches what the item IS, not just "something you buy". E.g. a clock/watch → 购物 or 日用; a toy/figure/collectible → 玩具. Don't put non-toy items into 玩具 just because the category exists.
-- CRITICAL: reply MUST be under 50 words. Keep it short by default, only say more when genuinely needed (e.g. query results, warnings).
+- For record/modify replies, keep it fun and witty (1-2 sentences, can be playful). For query results or warnings, be concise. Be creative with comments — tease, joke, use slang, reference pop culture.
 - For record/modify actions, reply MUST mention: 1) amount with sign (expense use -, income use +) 2) category LABEL (e.g. 购物/餐饮/娱乐, NOT the desc) 3) desc. Weave into a fun sentence. Examples: "购物-50，绫波丽到手！剁手快乐～" / "餐饮-300，火锅真香！" / "salary +8000, payday!~". Never skip category label. IMPORTANT: expense MUST use minus sign "-", income MUST use plus sign "+".
-- "改为X分类" or "移到X" means ONLY change the category, do NOT touch the description or amount. Only change what the user explicitly asks to change.
-- If user wants to move a record to a category that doesn't exist yet, do BOTH in one response: first create the category (action: category), then modify the record. Actually, return action "modify" with the new cat key — the system will auto-create unknown categories.
+- "改为X分类" or "移到X" or "换成X" means ONLY change the category, do NOT touch the description or amount. Only change what the user explicitly asks to change. Use the EXACT category name the user specified — do NOT substitute it with a similar existing category. E.g. "换成sofubi" → cat:"sofubi", NOT cat:"玩具". If the category doesn't exist, just use the user's name directly — the system will auto-create it.
+- If user wants to move a record to a category that doesn't exist yet, return action "modify" with the new cat key — the system will auto-create unknown categories. NEVER map user's specified category name to a different existing category.
 - NEVER ask for confirmation on modify actions. Just do it directly. Only ask confirmation for delete.`;
 
             proConversation.push({ role: 'user', content: text });
@@ -6183,7 +6184,7 @@ IMPORTANT RULES:
                     const changes = d.changes || d;
                     if (found && (changes.amount !== undefined || changes.cat || changes.desc || changes.type || changes.date)) {
                         pushUndo('modify', {...found});
-                        if (changes.amount !== undefined) found.amount = Number(changes.amount);
+                        if (changes.amount !== undefined) found.amount = Math.abs(Number(changes.amount));
                         if (changes.cat) {
                             let catKey = changes.cat;
                             if (!EXPENSE_CATS[catKey] && !INCOME_CATS[catKey]) {
