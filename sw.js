@@ -1,4 +1,4 @@
-const CACHE = 'nf-v16';
+const CACHE = 'nf-v18';
 
 self.addEventListener('install', e => {
     self.skipWaiting();
