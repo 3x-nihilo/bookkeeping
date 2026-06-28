@@ -656,13 +656,16 @@
             gap: 2px;
             padding-right: 4px;
             opacity: 0;
+            pointer-events: none;
             transition: opacity 0.2s;
+            z-index: 2;
         }
-        .tx-swipe-wrapper.swiped .tx-swipe-actions { opacity: 1; }
+        .tx-swipe-wrapper.swiped .tx-swipe-actions { opacity: 1; pointer-events: auto; }
         .tx-swipe-content {
             transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
             position: relative;
             z-index: 1;
+            touch-action: pan-y;
         }
         .tx-swipe-wrapper.swiped .tx-swipe-content { transform: translateX(-120px); }
 
@@ -920,7 +923,7 @@
             </div>
 
             <!-- 版本 -->
-            <p class="text-center text-[11px] text-white/15 pt-4 font-num">v3.2.0 · build 0628</p>
+            <p class="text-center text-[11px] text-white/15 pt-4 font-num">v3.3.0 · build 0628</p>
         </section>
 
     </main>
@@ -3073,16 +3076,24 @@
         }
 
         function initSwipe(el) {
-            let startX = 0, moved = false;
+            let startX = 0, startY = 0, moved = false;
             const content = el.querySelector('.tx-swipe-content');
-            content.addEventListener('touchstart', e => { startX = e.touches[0].clientX; moved = false; });
+            content.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; moved = false; }, {passive: true});
             content.addEventListener('touchmove', e => {
                 const dx = e.touches[0].clientX - startX;
+                const dy = Math.abs(e.touches[0].clientY - startY);
+                if (dy > 20) return;
                 if (dx < -30) { el.classList.add('swiped'); moved = true; }
                 else if (dx > 30) { el.classList.remove('swiped'); moved = true; }
+            }, {passive: true});
+            content.addEventListener('click', e => {
+                if (moved) { moved = false; e.stopPropagation(); e.preventDefault(); return; }
+                if (el.classList.contains('swiped')) { el.classList.remove('swiped'); e.stopPropagation(); e.preventDefault(); return; }
             });
-            content.addEventListener('touchend', () => { if (moved) { /* keep state */ } });
-            content.addEventListener('click', e => { if (el.classList.contains('swiped')) { el.classList.remove('swiped'); e.stopPropagation(); e.preventDefault(); } });
+            const actions = el.querySelector('.tx-swipe-actions');
+            if (actions) {
+                actions.addEventListener('click', e => { e.stopPropagation(); });
+            }
         }
 
         function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -3237,10 +3248,30 @@
             const isStats = modal.dataset.statsMode === 'true';
 
             if (isStats) {
-                const _s = clampDate(getPickerValue('sp-rs-year'), getPickerValue('sp-rs-month'), getPickerValue('sp-rs-day'));
-                const _e = clampDate(getPickerValue('sp-re-year'), getPickerValue('sp-re-month'), getPickerValue('sp-re-day'));
-                let startStr = `${_s.y}-${String(_s.m).padStart(2,'0')}-${String(_s.d).padStart(2,'0')}`;
-                let endStr = `${_e.y}-${String(_e.m).padStart(2,'0')}-${String(_e.d).padStart(2,'0')}`;
+                let startStr, endStr;
+                if (mode === 'month') {
+                    let y = getPickerValue('sp-month-year');
+                    let m = getPickerValue('sp-month-month');
+                    const _now = new Date();
+                    if (y > _now.getFullYear()) { y = _now.getFullYear(); m = _now.getMonth()+1; }
+                    else if (y === _now.getFullYear() && m > _now.getMonth()+1) { m = _now.getMonth()+1; }
+                    const lastDay = new Date(y, m, 0).getDate();
+                    startStr = `${y}-${String(m).padStart(2,'0')}-01`;
+                    endStr = `${y}-${String(m).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
+                } else if (mode === 'year') {
+                    const y = Math.min(getPickerValue('sp-year'), new Date().getFullYear());
+                    startStr = `${y}-01-01`;
+                    endStr = `${y}-12-31`;
+                } else if (mode === 'day') {
+                    const _d = clampDate(getPickerValue('sp-day-year'), getPickerValue('sp-day-month'), getPickerValue('sp-day-day'));
+                    startStr = `${_d.y}-${String(_d.m).padStart(2,'0')}-${String(_d.d).padStart(2,'0')}`;
+                    endStr = startStr;
+                } else {
+                    const _s = clampDate(getPickerValue('sp-rs-year'), getPickerValue('sp-rs-month'), getPickerValue('sp-rs-day'));
+                    const _e = clampDate(getPickerValue('sp-re-year'), getPickerValue('sp-re-month'), getPickerValue('sp-re-day'));
+                    startStr = `${_s.y}-${String(_s.m).padStart(2,'0')}-${String(_s.d).padStart(2,'0')}`;
+                    endStr = `${_e.y}-${String(_e.m).padStart(2,'0')}-${String(_e.d).padStart(2,'0')}`;
+                }
                 if (startStr > endStr) { [startStr, endStr] = [endStr, startStr]; }
                 customStatsRange.start = startStr;
                 customStatsRange.end = endStr;
@@ -3393,7 +3424,9 @@
             const _rl = document.getElementById('trend-range-label');
             if (_rl) {
                 const _fmt = d => `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}`;
-                _rl.textContent = (startDate.getTime() > 0) ? `${_fmt(startDate)} - ${_fmt(now)}` : '';
+                if (startDate.getTime() <= 0) { _rl.textContent = ''; }
+                else if (startDate.toDateString() === now.toDateString()) { _rl.textContent = _fmt(startDate); }
+                else { _rl.textContent = `${_fmt(startDate)} - ${_fmt(now)}`; }
             }
 
             const expenseTxs = txs.filter(t => {
@@ -3539,9 +3572,16 @@
                 const totalDays = Math.ceil((now - startDay) / (24*60*60*1000)) + 1;
                 const useOffset = (now.getMonth() !== startDay.getMonth() || now.getFullYear() !== startDay.getFullYear());
                 const limitDay = useOffset ? totalDays : now.getDate();
-                labels = useOffset
-                    ? Array.from({length: limitDay}, (_, i) => { const d = new Date(startDay.getTime() + i*24*60*60*1000); return `${d.getMonth()+1}/${d.getDate()}`; })
-                    : Array.from({length: limitDay}, (_, i) => i + 1);
+                if (useOffset) {
+                    labels = Array.from({length: limitDay}, (_, i) => { const d = new Date(startDay.getTime() + i*24*60*60*1000); return `${d.getMonth()+1}/${d.getDate()}`; });
+                } else {
+                    const step = limitDay <= 15 ? 2 : 5;
+                    labels = Array.from({length: limitDay}, (_, i) => {
+                        const day = i + 1;
+                        if (day === 1 || day === limitDay || day % step === 0) return day;
+                        return '';
+                    });
+                }
                 expensePoints = new Array(limitDay).fill(0);
                 incomePoints = new Array(limitDay).fill(0);
 
@@ -3695,7 +3735,12 @@
                     scales: {
                         x: {
                             grid: { display: false, drawBorder: false },
-                            ticks: { color: '#64748b', font: { size: 10, family: 'Inter' } }
+                            ticks: {
+                                color: '#64748b',
+                                font: { size: 10, family: 'Inter' },
+                                autoSkip: false,
+                                maxRotation: 0
+                            }
                         },
                         y: {
                             display: false,
@@ -6920,7 +6965,7 @@ IMPORTANT RULES:
             document.getElementById('date-filter-modal').classList.remove('hidden');
             initDatePicker();
             document.getElementById('date-filter-modal').dataset.statsMode = 'true';
-            setDateFilterMode('range');
+            setDateFilterMode('month');
         }
 
 
