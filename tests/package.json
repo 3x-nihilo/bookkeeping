@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "scripts": { "test": "node storage.test.cjs" },
+  "devDependencies": { "fake-indexeddb": "6.2.4" }
+}
