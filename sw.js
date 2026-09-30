@@ -1,7 +1,7 @@
-const CACHE = 'nf-v29-local';
+const CACHE = 'nf-v31-id-compat';
 const ASSETS = ['./', './index.html', './app.js', './storage.js', './manifest.json', './icon.png', './icon-512.png', './vendor/tailwind.js', './vendor/lucide.js', './vendor/chart.js'];
 self.addEventListener('install', event => {
-    event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
+    event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS.map(path => new Request(path, {cache:'reload'})))));
     // Wait until old tabs close: never swap code while the user is entering a bill.
 });
 self.addEventListener('activate', event => {
@@ -23,3 +23,6 @@ self.addEventListener('fetch', event => {
         } catch (error) { if (cached) return cached; throw error; }
     }));
 });
+
+// Explicit recovery page requests activation; ordinary upgrades still wait.
+self.addEventListener('message', event => { if (event.data?.type === 'NF_ACTIVATE_UPDATE') self.skipWaiting(); });

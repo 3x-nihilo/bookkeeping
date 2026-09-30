@@ -12,8 +12,8 @@
             if (!owned(k) || typeof v !== 'string') throw Error('包含不支持的数据字段');
             if (/^txs_/.test(k)) {
                 const rows = JSON.parse(v);
-                if (!Array.isArray(rows) || rows.some(t => !t || !Number.isFinite(t.id) || !Number.isFinite(t.amount) || t.amount <= 0 || !['income','expense'].includes(t.type) || typeof t.desc !== 'string' || typeof t.cat !== 'string' || !Number.isFinite(Date.parse(t.date)))) throw Error('账单数据格式不正确');
-                if (new Set(rows.map(t => t.id)).size !== rows.length) throw Error('账单编号重复');
+                if (!Array.isArray(rows) || rows.some(t => !t || !((typeof t.id === 'number' && Number.isFinite(t.id)) || (typeof t.id === 'string' && t.id.trim().length > 0)) || !Number.isFinite(t.amount) || t.amount <= 0 || !['income','expense'].includes(t.type) || typeof t.desc !== 'string' || typeof t.cat !== 'string' || !Number.isFinite(Date.parse(t.date)))) throw Error('账单数据格式不正确');
+                if (new Set(rows.map(t => String(t.id))).size !== rows.length) throw Error('账单编号重复');
             } else if (k === 'books') {
                 const rows = JSON.parse(v);
                 if (!Array.isArray(rows) || !rows.length || rows.some(b => !b || typeof b.id !== 'string' || !/^[\w-]+$/.test(b.id) || typeof b.name !== 'string' || typeof b.icon !== 'string' || typeof b.color !== 'string') || new Set(rows.map(b=>b.id)).size !== rows.length) throw Error('账本数据格式不正确');
@@ -137,5 +137,21 @@
         };
         script.onerror = () => block('应用未能加载，请联网后刷新重试。');
         document.body.append(script);
-    } catch (error) { block('无法安全读取账本，已停止写入以保护现有记录。请勿清理浏览器数据。错误：'+error.message); }
+    } catch (error) {
+        block('无法安全读取账本，已停止写入以保护现有记录。请勿清理浏览器数据。错误：'+error.message);
+        const exportButton = document.createElement('button');
+        exportButton.textContent = '导出原始数据以便恢复';
+        exportButton.style.cssText = 'margin-top:24px;padding:14px 20px;border:1px solid #666;border-radius:16px;font-size:15px';
+        exportButton.onclick = () => {
+            const keys = Object.keys(localStorage).filter(key => key === KEY || key === 'txs' || owned(key));
+            const data = Object.fromEntries(keys.map(key => [key,localStorage.getItem(key)]));
+            // Emergency archive can contain original API settings. Keep it private.
+            const url = URL.createObjectURL(new Blob([JSON.stringify({app:'NeuroFinance-raw-recovery',data},null,2)],{type:'application/json'}));
+            const a = document.createElement('a'); a.href=url; a.download='NeuroFinance-原始数据-请勿公开.json';
+            document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
+        };
+        gate.append(exportButton);
+        const updateLink = document.createElement('a'); updateLink.href='./recover.html';
+        updateLink.textContent='更新应用代码（保留账本）'; updateLink.style.cssText='margin-top:16px;font-size:15px;color:#c4b5fd'; gate.append(updateLink);
+    }
 })();

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0e0e12"><title>更新记账应用</title>
+<style>body{margin:0;background:#0e0e12;color:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,sans-serif;min-height:100dvh;display:grid;place-items:center}main{max-width:360px;padding:32px}h1{font-size:24px;letter-spacing:-.5px}p{font-size:15px;line-height:1.8;color:#aaa}button,a{font:inherit;border-radius:16px;padding:15px 20px;display:block;width:100%;box-sizing:border-box;text-align:center;border:0;margin-top:16px;text-decoration:none}button{background:#7c3aed;color:white;cursor:pointer}button:disabled{opacity:.5}a{color:#c4b5fd;background:#ffffff09}#status{font-size:13px}small{color:#666}</style></head>
+<body><main><h1>更新应用，保留账本</h1><p>修复旧版 AI 账单无法读取的问题。这里只更新页面和程序文件，不会清理你的账单或本机备份。</p><button id="update">更新到修复版</button><p id="status" role="status">请先确认 GitHub Pages 已发布新文件，并关闭其他记账页面。</p><a href="./">返回账本</a><small>修复版本 v3.4.4</small></main>
+<script>
+const button=document.getElementById('update'),status=document.getElementById('status');
+button.onclick=async()=>{
+ button.disabled=true;status.textContent='正在下载新版本，请保持联网…';
+ try {
+  if(!('serviceWorker' in navigator)) {location.replace('./');return;}
+  const reg=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});
+  await reg.update();
+  let worker=reg.waiting||reg.installing;
+  if(worker && worker.state!=='installed' && worker.state!=='activated') await new Promise((resolve,reject)=>{
+   const timeout=setTimeout(()=>{worker.removeEventListener('statechange',changed);reject(Error('下载超时，请稍后重试'));},45000);
+   function changed(){if(['installed','activated'].includes(worker.state)){clearTimeout(timeout);worker.removeEventListener('statechange',changed);resolve();}else if(worker.state==='redundant'){clearTimeout(timeout);worker.removeEventListener('statechange',changed);reject(Error('新版本下载失败，请确认网站文件上传完整'));}}
+   worker.addEventListener('statechange',changed);changed();
+  });
+  if(reg.waiting){
+   const waiting=reg.waiting;
+   await new Promise((resolve,reject)=>{
+    const timeout=setTimeout(()=>{waiting.removeEventListener('statechange',changed);reject(Error('更新尚未生效，请关闭其他记账页面后再试'));},15000);
+    function changed(){if(waiting.state==='activated'){clearTimeout(timeout);waiting.removeEventListener('statechange',changed);resolve();}else if(waiting.state==='redundant'){clearTimeout(timeout);waiting.removeEventListener('statechange',changed);reject(Error('激活失败，请重试'));}}
+    waiting.addEventListener('statechange',changed);waiting.postMessage({type:'NF_ACTIVATE_UPDATE'});changed();
+   });
+  }
+  status.textContent='应用代码已更新。请返回账本查看，若仍是旧版本，请等待 GitHub Pages 发布完成后重试。';
+ }catch(error){status.textContent='暂未完成：'+error.message+'。无需清理浏览器数据。';}
+ finally{button.disabled=false;}
+};
+</script></body></html>

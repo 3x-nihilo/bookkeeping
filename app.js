@@ -6064,7 +6064,9 @@ IMPORTANT RULES:
             if (txDate > new Date()) { showToast(t('no_future_date') || '不能选择未来日期', 'error'); return; }
             const descVal = document.getElementById('e-desc').value.trim();
             const idVal = document.getElementById('e-id').value;
-            const id = idVal ? Number(idVal) : Date.now() + Math.floor(Math.random() * 10000);
+            const originalTx = idVal ? txs.find(x => String(x.id) === idVal) : null;
+            if (idVal && !originalTx) { showToast('未找到原账单，请重新打开后重试', 'error'); return; }
+            const id = originalTx ? originalTx.id : Date.now() + Math.floor(Math.random() * 10000);
             const type = document.getElementById('btn-expense').classList.contains('text-white') ? 'expense' : 'income';
             const isEdit = !!idVal;
             const newTx = {
@@ -6083,10 +6085,10 @@ IMPORTANT RULES:
         }
 
         function deleteTxFromModal() {
-            const id = Number(document.getElementById('e-id').value);
-            const tx = txs.find(x => x.id === id);
+            const id = document.getElementById('e-id').value;
+            const tx = txs.find(x => String(x.id) === id);
             if (tx) pushUndo('delete', {...tx});
-            txs = txs.filter(x => x.id !== id);
+            txs = txs.filter(x => String(x.id) !== String(id));
             renderAll();
             closeEditModal();
             showToast(t('toast_deleted'));
@@ -6127,3 +6129,97 @@ IMPORTANT RULES:
 
     
 function viewAllHistory() { showAllHistory = true; listFilterType = 'all'; listFilterCat = 'all'; document.getElementById('label-cat').textContent = t('all_cats'); document.getElementById('label-type').textContent = '收支'; renderTransactionList(); }
+
+// Backup settings sheet: focus containment, scroll locking, and drag dismissal.
+let storagePanelState = null;
+let storagePanelClosing = false;
+function openStoragePanel() {
+    if (storagePanelState || storagePanelClosing) return;
+    const panel = document.getElementById('storage-panel');
+    storagePanelState = {
+        focus: document.activeElement,
+        scrollY: window.scrollY,
+        body: ['overflow','position','top','width'].map(key => [key,document.body.style[key]]),
+        background: [...document.querySelectorAll('main,nav')].map(el => [el,el.inert])
+    };
+    storagePanelState.background.forEach(([el]) => { el.inert = true; });
+    Object.assign(document.body.style,{overflow:'hidden',position:'fixed',top:`-${storagePanelState.scrollY}px`,width:'100%'});
+    document.getElementById('storage-feedback').textContent = '';
+    panel.classList.remove('hidden');
+    lucide.createIcons();
+    panel.focus({preventScroll:true});
+    requestAnimationFrame(() => panel.classList.add('is-open'));
+    document.addEventListener('keydown', handleStoragePanelKey);
+    initStoragePanelDrag();
+}
+function closeStoragePanel() {
+    if (!storagePanelState || storagePanelClosing) return;
+    storagePanelClosing = true;
+    const panel = document.getElementById('storage-panel');
+    panel.classList.remove('is-open');
+    document.removeEventListener('keydown', handleStoragePanelKey);
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setTimeout(() => {
+        panel.classList.add('hidden');
+        const previous = storagePanelState;
+        previous.body.forEach(([key,value]) => { document.body.style[key] = value; });
+        previous.background.forEach(([el,inert]) => { el.inert = inert; });
+        window.scrollTo(0,previous.scrollY);
+        previous.focus?.focus({preventScroll:true});
+        storagePanelState = null;
+        storagePanelClosing = false;
+    }, reduced ? 0 : 320);
+}
+function handleStoragePanelKey(event) {
+    if (event.key === 'Escape') { event.preventDefault(); closeStoragePanel(); return; }
+    if (event.key !== 'Tab') return;
+    const panel = document.getElementById('storage-panel');
+    const buttons = [...panel.querySelectorAll('button:not(:disabled)')];
+    const first = buttons[0], last = buttons[buttons.length-1];
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === panel)) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && (document.activeElement === last || document.activeElement === panel)) { event.preventDefault(); first.focus(); }
+}
+function initStoragePanelDrag() {
+    const panel = document.getElementById('storage-panel');
+    const header = panel.querySelector('.storage-panel-header');
+    if (header.dataset.dragReady) return;
+    header.dataset.dragReady = 'true';
+    const sheet = panel.querySelector('.storage-sheet');
+    let start = null, distance = 0;
+    header.addEventListener('pointerdown', event => {
+        if (event.target.closest('button') || !event.isPrimary || event.button !== 0) return;
+        start = event.clientY; distance = 0;
+        header.setPointerCapture(event.pointerId);
+        sheet.style.transition = 'none';
+    });
+    header.addEventListener('pointermove', event => {
+        if (start === null) return;
+        distance = Math.max(0,event.clientY-start);
+        sheet.style.transform = `translate(-50%,${distance}px)`;
+    });
+    const endDrag = event => {
+        if (start === null) return;
+        start = null;
+        sheet.style.transition = '';
+        sheet.style.transform = '';
+        if (header.hasPointerCapture(event.pointerId)) header.releasePointerCapture(event.pointerId);
+        if (event.type !== 'pointercancel' && distance > 80) closeStoragePanel();
+    };
+    header.addEventListener('pointerup',endDrag);
+    header.addEventListener('pointercancel',endDrag);
+}
+function exportStorageBackup() {
+    nfStorage.exportBackup();
+    document.getElementById('storage-feedback').textContent = '备份文件已生成，请在下载菜单中保存到“文件”。';
+}
+async function protectLocalStorage(button) {
+    button.disabled = true;
+    const feedback = document.getElementById('storage-feedback');
+    feedback.textContent = '正在检查本机保护…';
+    try {
+        await nfStorage.requestPersistence();
+        feedback.textContent = document.getElementById('storage-status').textContent;
+    } catch {
+        feedback.textContent = '暂时无法申请保护，请先备份到“文件”。';
+    } finally { button.disabled = false; }
+}
