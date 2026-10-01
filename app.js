@@ -1808,9 +1808,15 @@
         function showToast(msg, type = 'success') {
             const icons = { success: 'check-circle', error: 'alert-circle', info: 'info' };
             const colors = { success: 'text-teal-neon', error: 'text-red-400', info: 'text-cyber-purple' };
+            document.querySelectorAll('.app-toast').forEach(el => el.remove());
             const toast = document.createElement('div');
-            toast.className = 'fixed top-12 left-1/2 -translate-x-1/2 z-[100] px-4 py-2.5 rounded-[16px] bg-[#141416]/95 border-0 text-xs text-white/80 backdrop-blur-xl shadow-2xl flex items-center gap-2 animate-fade-in';
-            toast.innerHTML = `<i data-lucide="${icons[type]}" class="w-4 h-4 ${colors[type]}"></i>${msg}`;
+            toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+            toast.className = 'app-toast fixed left-1/2 -translate-x-1/2 z-[100] px-4 py-2.5 rounded-[16px] bg-[#141416]/95 border-0 text-xs text-white/80 backdrop-blur-xl shadow-2xl flex items-center gap-2 animate-fade-in';
+            toast.innerHTML = `<i data-lucide="${icons[type]}" class="w-4 h-4 ${colors[type]}"></i>`;
+            const message = document.createElement('span');
+            message.className = 'app-toast-message';
+            message.textContent = msg;
+            toast.appendChild(message);
             document.body.appendChild(toast);
             lucide.createIcons({attrs: {class: ''}, nameAttr: 'data-lucide'});
             setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.5s'; }, 2500);
@@ -5513,7 +5519,6 @@ IMPORTANT RULES:
         function renderTransactionList() {
             const list = document.getElementById('transaction-list');
             list.innerHTML = '';
-            document.getElementById('history-scope').textContent = showAllHistory ? '全部历史记录（当前账本）' : '已按日期筛选 · 点击上方查看全部';
 
             const filtered = txs.filter(t => {
                 const txDate = new Date(t.date);
@@ -6128,7 +6133,6 @@ IMPORTANT RULES:
         }
 
     
-function viewAllHistory() { showAllHistory = true; listFilterType = 'all'; listFilterCat = 'all'; document.getElementById('label-cat').textContent = t('all_cats'); document.getElementById('label-type').textContent = '收支'; renderTransactionList(); }
 
 // Backup settings sheet: focus containment, scroll locking, and drag dismissal.
 let storagePanelState = null;

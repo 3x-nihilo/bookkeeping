@@ -1,4 +1,4 @@
-const CACHE = 'nf-v31-id-compat';
+const CACHE = 'nf-v32-safe-area';
 const ASSETS = ['./', './index.html', './app.js', './storage.js', './manifest.json', './icon.png', './icon-512.png', './vendor/tailwind.js', './vendor/lucide.js', './vendor/chart.js'];
 self.addEventListener('install', event => {
     event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS.map(path => new Request(path, {cache:'reload'})))));
