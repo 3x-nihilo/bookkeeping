@@ -6119,20 +6119,17 @@ IMPORTANT RULES:
             // Placeholder to keep original calls safe, but logic moved to applyDateFilter
         }
 
-        // PWA: Register external service worker + auto-update
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js').then(reg => {
-                reg.addEventListener('updatefound', () => {
-                    const nw = reg.installing;
-                    if (nw) nw.addEventListener('statechange', () => {
-                        if (nw.state === 'activated') console.info('新版本已就绪，下次打开时使用。');
-                    });
-                });
-                setInterval(() => reg.update(), 60 * 1000);
-            }).catch(() => {});
+        // Protect asynchronous work even if the user switches away from chat.
+        let updateTasks = 0;
+        for (const name of ['processAIWithLLM', 'transcribeWithGemini']) {
+            const original = window[name];
+            window[name] = async function(...args) {
+                updateTasks++;
+                try { return await original.apply(this, args); }
+                finally { updateTasks--; }
+            };
         }
-
-    
+        window.nfUpdateBusy = () => !!(updateTasks || isListening || speechActive || isRecordingFallback || pendingAction || multiTurnState);
 
 // Backup settings sheet: focus containment, scroll locking, and drag dismissal.
 let storagePanelState = null;

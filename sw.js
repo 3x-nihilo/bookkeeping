@@ -1,8 +1,8 @@
-const CACHE = 'nf-v32-safe-area';
-const ASSETS = ['./', './index.html', './app.js', './storage.js', './manifest.json', './icon.png', './icon-512.png', './vendor/tailwind.js', './vendor/lucide.js', './vendor/chart.js'];
+const CACHE = 'nf-v33-auto-update';
+const ASSETS = ['./', './index.html', './app.js', './storage.js', './updater.js', './manifest.json', './icon.png', './icon-512.png', './vendor/tailwind.js', './vendor/lucide.js', './vendor/chart.js'];
 self.addEventListener('install', event => {
     event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS.map(path => new Request(path, {cache:'reload'})))));
-    // Wait until old tabs close: never swap code while the user is entering a bill.
+    // The page requests activation only when it is safe to update.
 });
 self.addEventListener('activate', event => {
     event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => /^nf-v/.test(k) && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
@@ -24,5 +24,5 @@ self.addEventListener('fetch', event => {
     }));
 });
 
-// Explicit recovery page requests activation; ordinary upgrades still wait.
+// Foreground updater and recovery page can activate a fully cached release.
 self.addEventListener('message', event => { if (event.data?.type === 'NF_ACTIVATE_UPDATE') self.skipWaiting(); });

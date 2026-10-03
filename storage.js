@@ -105,6 +105,7 @@
             setItem: (k,v) => { if (!owned(k)) throw Error('未知存储字段：'+k); commit({...state.data,[k]:String(v)}); },
             removeItem: k => { const next = {...state.data}; delete next[k]; commit(next); },
             requestPersistence,
+            flush: () => queue,
             exportBackup() {
                 const data = {...state.data}; for (const key of ['gemini_api_key','pro_config','pro_keys','pro_ai_enabled']) delete data[key];
                 const backup = {app:'NeuroFinance',version:1,createdAt:new Date().toISOString(),data};
@@ -134,10 +135,12 @@
         script.onload = () => {
             try { initializeApp(); gate.style.display='none'; requestPersistence(); }
             catch (error) { block('账本未能完整加载，请刷新重试。现有数据已保留。错误：'+error.message); }
+            finally { window.nfBootComplete = true; }
         };
-        script.onerror = () => block('应用未能加载，请联网后刷新重试。');
+        script.onerror = () => { block('应用未能加载，请联网后刷新重试。'); window.nfBootComplete = true; };
         document.body.append(script);
     } catch (error) {
+        window.nfBootComplete = true;
         block('无法安全读取账本，已停止写入以保护现有记录。请勿清理浏览器数据。错误：'+error.message);
         const exportButton = document.createElement('button');
         exportButton.textContent = '导出原始数据以便恢复';
